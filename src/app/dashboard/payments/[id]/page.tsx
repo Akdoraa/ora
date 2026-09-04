@@ -5,6 +5,7 @@ import { Card, Hairline, Row, Badge } from "@/components/ui/primitives";
 import { StatusPill } from "@/components/dashboard/status-pill";
 import { AgentDecisionPanel } from "@/components/agent/decision-panel";
 import { PaymentActions } from "@/components/dashboard/payment-actions";
+import { WebhookMini } from "@/components/dashboard/webhook-mini";
 import { getIntentAggregate } from "@/lib/payment-intents/service";
 import { getDb, schema } from "@/db/client";
 import { eq } from "drizzle-orm";
@@ -83,12 +84,15 @@ export default async function PaymentDetail({ params }: { params: Promise<{ id: 
             </div>
             <div className="mt-2 space-y-1.5">
               {deliveries.map((d) => (
-                <div key={d.id} className="flex items-center justify-between gap-2 text-[13px]">
-                  <span className="font-mono text-[12px] text-ink-soft">{d.eventType}</span>
-                  <Badge tone={d.status === "delivered" ? "positive" : d.status === "failed" ? "negative" : "warning"}>
-                    {d.status} · {d.responseStatus ?? "—"}
-                  </Badge>
-                </div>
+                <WebhookMini
+                  key={d.id}
+                  d={{
+                    id: d.id,
+                    eventType: d.eventType,
+                    status: d.status,
+                    responseStatus: d.responseStatus,
+                  }}
+                />
               ))}
               {deliveries.length === 0 && (
                 <p className="text-[13px] text-muted">No webhooks for this payment.</p>

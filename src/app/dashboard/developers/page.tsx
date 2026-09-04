@@ -2,11 +2,11 @@ import Link from "next/link";
 import { DashboardShell } from "@/components/dashboard/shell";
 import { Card, Hairline, Badge, Row } from "@/components/ui/primitives";
 import { CopyBlock } from "@/components/dashboard/copy-block";
+import { WebhookRow } from "@/components/dashboard/webhook-row";
 import { merchantWebhookLog } from "@/lib/analytics/merchant";
 import { currentMerchantId, DEMO_API_KEY } from "@/lib/dashboard";
 import { seedId } from "@/lib/ids";
 import { env } from "@/env";
-import { fmtDateTime } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -141,24 +141,22 @@ export default async function DevelopersPage() {
         <table className="w-full text-sm">
           <tbody>
             {deliveries.map((d) => (
-              <tr key={d.id} className="border-t border-line first:border-0">
-                <td className="py-2 pl-5 font-mono text-[12px] text-ink">{d.eventType}</td>
-                <td className="py-2 font-mono text-[11px] text-faint">
-                  {d.signature.slice(0, 28)}…
-                </td>
-                <td className="py-2">
-                  <Badge tone={d.status === "delivered" ? "positive" : d.status === "failed" ? "negative" : "warning"}>
-                    {d.status} {d.responseStatus ?? ""}
-                  </Badge>
-                </td>
-                <td className="py-2 pr-5 text-right font-mono text-[11px] text-faint">
-                  {fmtDateTime(d.createdAt)}
-                </td>
-              </tr>
+              <WebhookRow
+                key={d.id}
+                d={{
+                  id: d.id,
+                  eventType: d.eventType,
+                  signature: d.signature,
+                  status: d.status,
+                  responseStatus: d.responseStatus,
+                  attempts: d.attempts,
+                  createdAt: d.createdAt.toISOString(),
+                }}
+              />
             ))}
             {deliveries.length === 0 && (
               <tr>
-                <td className="px-5 py-6 text-sm text-muted" colSpan={4}>
+                <td className="px-5 py-6 text-sm text-muted" colSpan={6}>
                   No deliveries yet.{" "}
                   <Link href="/demo" className="text-brand hover:underline">
                     Run the demo →

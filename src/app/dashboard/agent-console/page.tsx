@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { DashboardShell } from "@/components/dashboard/shell";
 import { Card, Hairline, Row, Badge } from "@/components/ui/primitives";
+import { PolicyEditor } from "@/components/dashboard/policy-editor";
 import { getDb, schema } from "@/db/client";
 import { eq, desc } from "drizzle-orm";
 import { seedId } from "@/lib/ids";
+import { money, toNumber } from "@/lib/money/money";
 import { fmtMinor, fmtPct, humanSeconds, fmtDateTime } from "@/lib/format";
 
 export const runtime = "nodejs";
@@ -52,6 +54,22 @@ export default async function AgentConsole() {
                 The objective can only <em>tighten</em> these. Hard caps (max payment, daily spend)
                 are re-checked by the transaction executor and cannot be overridden by the model.
               </p>
+              <Hairline className="my-3" />
+              <PolicyEditor
+                policyId={policy.id}
+                policyCurrency={policy.policyCurrency}
+                maxPaymentAmountMajor={toNumber(money(policy.maxPaymentAmount, policy.policyCurrency))}
+                maxDailySpendAmountMajor={toNumber(
+                  money(policy.maxDailySpendAmount, policy.policyCurrency),
+                )}
+                autoApproveUnderAmountMajor={toNumber(
+                  money(policy.autoApproveUnderAmount, policy.policyCurrency),
+                )}
+                maxFxSpreadPct={policy.maxFxSpreadBps / 100}
+                maxProcessingFeePct={policy.maxProcessingFeeBps / 100}
+                requiredSettlementSeconds={policy.requiredSettlementSeconds}
+                requireApprovalForNewPayee={policy.requireApprovalForNewPayee}
+              />
             </div>
           ) : (
             <p className="mt-3 text-sm text-muted">No seeded policy.</p>
