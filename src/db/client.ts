@@ -1,4 +1,3 @@
-import "server-only";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { env, dbDriver } from "@/env";
 import * as schema from "./schema";
@@ -11,9 +10,7 @@ import * as schema from "./schema";
 export type Database = NodePgDatabase<typeof schema>;
 
 declare global {
-  // eslint-disable-next-line no-var
   var __oraDb: Database | undefined;
-  // eslint-disable-next-line no-var
   var __oraPglite: unknown | undefined;
 }
 

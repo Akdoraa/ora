@@ -22,11 +22,12 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:reset": "tsx scripts/db-reset.ts",
-    "db:seed": "tsx scripts/seed.ts",
-    "setup": "pnpm db:migrate && pnpm db:seed",
-    "demo:reset": "tsx scripts/seed.ts --reset",
-    "xrpl:setup": "tsx scripts/xrpl-setup.ts",
+    "db:reset": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/db-reset.ts",
+    "db:seed": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/seed.ts",
+    "setup": "pnpm db:migrate && pnpm xrpl:setup && pnpm db:seed",
+    "demo:reset": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/seed.ts --reset",
+    "xrpl:setup": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/xrpl-setup.ts",
+    "xrpl:smoke": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/xrpl-smoke.ts",
     "format": "prettier --write ."
   },
   "dependencies": {

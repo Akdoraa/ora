@@ -65,6 +65,15 @@ const serverSchema = z.object({
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 });
 
+/** Treat empty-string env values (common in .env files) as unset. */
+function compact(source: Record<string, string | undefined>) {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(source)) {
+    if (typeof v === "string" && v.trim() !== "") out[k] = v;
+  }
+  return out;
+}
+
 function parseEnv() {
   if (!isServer) {
     const parsed = clientSchema.safeParse({
@@ -79,11 +88,11 @@ function parseEnv() {
   }
 
   const merged = serverSchema.merge(clientSchema);
+  const src = compact(process.env);
   const parsed = merged.safeParse({
-    ...process.env,
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL,
-    NEXT_PUBLIC_XRPL_NETWORK:
-      process.env.NEXT_PUBLIC_XRPL_NETWORK ?? process.env.XRPL_NETWORK,
+    ...src,
+    NEXT_PUBLIC_APP_URL: src.NEXT_PUBLIC_APP_URL ?? src.APP_URL,
+    NEXT_PUBLIC_XRPL_NETWORK: src.NEXT_PUBLIC_XRPL_NETWORK ?? src.XRPL_NETWORK,
   });
   if (!parsed.success) {
     console.error("Invalid environment:", parsed.error.flatten().fieldErrors);
