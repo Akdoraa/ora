@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+/* ─── Ora design tokens ───────────────────────────────────────────────────────
+   Pulled from the pitch deck: black ink, warm off-white paper, a sky→cream
+   gradient on checkout, a restrained functional blue for links, and lime used
+   only for positive deltas. Primary actions are ink-black, not blue.
+*/
+@theme {
+  --color-ink: #0b0b0c;
+  --color-ink-soft: #2b2b2e;
+  --color-muted: #6b6b70;
+  --color-faint: #9a9a9f;
+  --color-paper: #fbfaf7;
+  --color-card: #ffffff;
+  --color-line: #e9e6df;
+  --color-line-strong: #d9d5cb;
+
+  --color-sky-50: #f2f7fd;
+  --color-sky-100: #e3edfa;
+  --color-sky-200: #c8dcf3;
+  --color-sky-300: #a9c9ec;
+  --color-sky-400: #7fa8dc;
+  --color-sky-500: #4f7fc4;
+  --color-sky-600: #35619f;
+
+  --color-cream: #f5efe1;
+
+  --color-brand: #2563eb;
+  --color-brand-ink: #1d4ed8;
+
+  --color-lime: #d4e85b;
+  --color-lime-deep: #b9cf3d;
+
+  --color-positive: #157f3b;
+  --color-positive-bg: #e8f4ec;
+  --color-negative: #b42318;
+  --color-negative-bg: #fdecea;
+  --color-warning: #b25e09;
+  --color-warning-bg: #fbf0e2;
+
+  --font-sans:
+    var(--font-hanken), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-serif: var(--font-newsreader), ui-serif, Georgia, "Times New Roman", serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --radius-card: 16px;
+
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(16, 24, 40, 0.12);
+  --shadow-pop: 0 4px 12px rgba(16, 24, 40, 0.08), 0 24px 48px -16px rgba(16, 24, 40, 0.22);
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The Ora checkout ground: a soft vertical sky→cream wash. */
+.ora-checkout-bg {
+  background:
+    linear-gradient(180deg, #bfd6f4 0%, #dde9f6 42%, #f2ecdd 100%);
+}
+
+.ora-hairline {
+  border-color: var(--color-line);
+}
+
+::selection {
+  background: var(--color-sky-200);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
