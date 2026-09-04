@@ -95,6 +95,18 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
       "auto-approve threshold cannot exceed the max-per-payment cap",
     );
   }
+  // sanity: the daily cap must be able to fit at least one max-size payment —
+  // hardSpendGuard checks both caps independently, so a daily cap smaller
+  // than the per-payment cap would silently make maxPaymentAmount
+  // unreachable (the first payment near it fails the daily check instead)
+  const nextDaily = patch.maxDailySpendAmount ?? existing.maxDailySpendAmount;
+  if (nextDaily < nextMax) {
+    return apiError(
+      422,
+      "invalid_policy",
+      "daily spend cap cannot be lower than the max-per-payment cap",
+    );
+  }
 
   const [updated] = await db
     .update(schema.agentPolicies)

@@ -21,6 +21,24 @@ export async function createMerchant(overrides: Partial<typeof schema.merchants.
   return id;
 }
 
+export async function createAgentPolicy(
+  overrides: Partial<typeof schema.agentPolicies.$inferInsert> = {},
+) {
+  const db = await getDb();
+  const id = overrides.id ?? newId("pol");
+  await db.insert(schema.agentPolicies).values({
+    id,
+    name: "Default policy",
+    policyCurrency: "GBP",
+    maxPaymentAmount: 400_000n,
+    maxDailySpendAmount: 1_000_000n,
+    autoApproveUnderAmount: 100_000n,
+    approvedCurrencies: ["GBP", "SGD"],
+    ...overrides,
+  });
+  return { id };
+}
+
 export async function createPaymentIntent(
   overrides: Partial<typeof schema.paymentIntents.$inferInsert> = {},
 ) {
