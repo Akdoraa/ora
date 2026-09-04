@@ -5,6 +5,7 @@ import { jsonSafe } from "@/lib/api/serialize";
 import { createPaymentIntent } from "@/lib/payment-intents/service";
 import { currentMerchantId } from "@/lib/dashboard";
 import { isSupportedCurrency } from "@/lib/money/currency";
+import { moneyFromDecimal } from "@/lib/money/money";
 import { env } from "@/env";
 
 export const runtime = "nodejs";
@@ -27,10 +28,13 @@ export async function POST(req: NextRequest) {
   if (!isSupportedCurrency(b.currency)) {
     return apiError(422, "unsupported_currency", `${b.currency} not supported`);
   }
-  const exp = 100; // 2 dp
+  // currency-aware, Decimal-based conversion — a hardcoded *100 here would
+  // silently misprice any non-2dp currency (e.g. JPY, exponent 0) and is
+  // exactly the float-precision risk `money.ts` exists to avoid
+  const amount = moneyFromDecimal(b.amountMajor, b.currency).amount;
   const intent = await createPaymentIntent({
     merchantId: currentMerchantId(),
-    amount: BigInt(Math.round(b.amountMajor * exp)),
+    amount,
     currency: b.currency,
     settlementCurrency: b.settlementCurrency,
     description: b.description,
