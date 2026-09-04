@@ -69,6 +69,16 @@ async function attemptDelivery(deliveryId: string): Promise<void> {
   if (!url) return;
 
   const body = JSON.stringify(d.payload);
+  // Sign fresh, right before sending — never reuse the signature computed
+  // at emit time. Two reasons: (1) jsonb does not preserve object key
+  // order, so `d.payload` read back from the DB can serialize to a
+  // different byte string than the one originally signed, which would
+  // make every delivery fail signature verification on the receiving end;
+  // (2) `signWebhook` embeds a timestamp checked against a tolerance
+  // window in `verifyWebhook` (default 300s) — reusing the original
+  // timestamp on a late retry (backoff goes up to 10 minutes) would make
+  // an honest retry look like an expired/replayed signature.
+  const signature = endpoint ? signWebhook(endpoint.secret, body) : d.signature;
   const attempt = d.attempts + 1;
   let status: (typeof schema.webhookDeliveryStatus.enumValues)[number] = "failed";
   let responseStatus: number | undefined;
@@ -79,7 +89,7 @@ async function attemptDelivery(deliveryId: string): Promise<void> {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "ora-signature": d.signature,
+        "ora-signature": signature,
         "ora-event-id": d.eventId,
         "ora-event-type": d.eventType,
       },
@@ -99,6 +109,7 @@ async function attemptDelivery(deliveryId: string): Promise<void> {
     .set({
       status,
       attempts: attempt,
+      signature,
       responseStatus,
       responseBody,
       deliveredAt: status === "delivered" ? new Date() : null,
@@ -145,6 +156,9 @@ export async function emitWebhook(
           eventType: type,
           eventId: event.id,
           payload: event as unknown as Record<string, unknown>,
+          // placeholder only — `signature` is NOT NULL, but attemptDelivery
+          // (called right below) always re-signs over the exact bytes it's
+          // about to send and overwrites this before anything goes out
           signature: signWebhook(t.secret, body),
           status: "pending",
         })
