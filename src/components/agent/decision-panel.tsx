@@ -35,6 +35,7 @@ export function AgentDecisionPanel({ data }: { data: IntentAggregate }) {
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center justify-between px-5 py-3.5 text-left"
         aria-expanded={open}
+        aria-label={open ? "Collapse agent activity" : "Expand agent activity"}
       >
         <span className="flex items-center gap-2">
           <span className="font-sans text-[15px] font-semibold text-ink">

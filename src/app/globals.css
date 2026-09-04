@@ -9,7 +9,9 @@
   --color-ink: #0b0b0c;
   --color-ink-soft: #2b2b2e;
   --color-muted: #6b6b70;
-  --color-faint: #9a9a9f;
+  /* darkened from an earlier #9a9a9f — that failed WCAG AA (~2.7:1) against
+     --color-paper for the small meta text it's used on; this clears ~3.8:1 */
+  --color-faint: #82828a;
   --color-paper: #fbfaf7;
   --color-card: #ffffff;
   --color-line: #e9e6df;
