@@ -7,5 +7,6 @@ pnpm-lock.yaml
 hook
 skills
 drizzle
+.pglite
 *.md
 Singhacks-challenge-statement.pdf

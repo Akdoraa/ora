@@ -28,6 +28,7 @@
     "demo:reset": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/seed.ts --reset",
     "xrpl:setup": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/xrpl-setup.ts",
     "xrpl:smoke": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/xrpl-smoke.ts",
+    "x402:smoke": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/x402-smoke.ts",
     "format": "prettier --write ."
   },
   "dependencies": {

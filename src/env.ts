@@ -55,7 +55,14 @@ const serverSchema = z.object({
   // --- x402 -------------------------------------------------------------------
   // Empty => Ora runs its own in-process facilitator against XRPL Testnet.
   X402_FACILITATOR_URL: z.string().optional(),
-  X402_ORACLE_PRICE_RLUSD: z.string().default("0.50"),
+  // Price of the signed FX/liquidity quote. XRP because the Testnet RLUSD faucet
+  // is GitHub-gated at 10/day; switches to RLUSD automatically on Mainnet.
+  X402_QUOTE_ASSET: z.enum(["XRP", "RLUSD"]).default("XRP"),
+  X402_QUOTE_PRICE: z.string().default("1"),
+  X402_QUOTE_SIGNING_SECRET: z
+    .string()
+    .min(16)
+    .default("dev-only-insecure-x402-quote-signing-secret"),
 
   // --- platform ------------------------------------------------------------
   WEBHOOK_SIGNING_SECRET: z
