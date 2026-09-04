@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Card } from "@/components/ui/primitives";
-import { Button } from "@/components/ui/button";
+import { Button, LinkButton } from "@/components/ui/button";
 
 const REFUNDABLE = new Set(["paid", "delivered", "partially_refunded"]);
 
@@ -50,16 +49,17 @@ export function PaymentActions({
     <Card className="p-5">
       <div className="text-[12px] font-medium uppercase tracking-wide text-faint">Actions</div>
       <div className="mt-3 flex flex-wrap gap-2">
-        <Link href={checkoutUrl} target="_blank">
-          <Button size="sm" variant="secondary">
-            Open checkout ↗
-          </Button>
-        </Link>
-        <Link href={`/api/payment-intents/${intentId}/manifest`} target="_blank">
-          <Button size="sm" variant="ghost">
-            View manifest
-          </Button>
-        </Link>
+        <LinkButton href={checkoutUrl} target="_blank" size="sm" variant="secondary">
+          Open checkout ↗
+        </LinkButton>
+        <LinkButton
+          href={`/api/payment-intents/${intentId}/manifest`}
+          target="_blank"
+          size="sm"
+          variant="ghost"
+        >
+          View manifest
+        </LinkButton>
         {REFUNDABLE.has(status) &&
           (confirming ? (
             <Button size="sm" variant="danger" onClick={refund} loading={busy}>

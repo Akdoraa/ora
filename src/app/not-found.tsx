@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { OraWordmark } from "@/components/brand/wordmark";
-import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/button";
 
 export const metadata = { title: "Not found" };
 
@@ -16,12 +15,10 @@ export default function NotFound() {
           The page — or payment — you&rsquo;re looking for doesn&rsquo;t exist, or the link has expired.
         </p>
         <div className="mt-6 flex justify-center gap-3">
-          <Link href="/">
-            <Button variant="secondary">Go home</Button>
-          </Link>
-          <Link href="/demo">
-            <Button>Try the live checkout</Button>
-          </Link>
+          <LinkButton href="/" variant="secondary">
+            Go home
+          </LinkButton>
+          <LinkButton href="/demo">Try the live checkout</LinkButton>
         </div>
       </div>
     </div>

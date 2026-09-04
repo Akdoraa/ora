@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { OraWordmark } from "@/components/brand/wordmark";
-import { Button } from "@/components/ui/button";
+import { LinkButton } from "@/components/ui/button";
 
 const PROOF = [
   "1% processing fee",
@@ -45,14 +45,12 @@ export default function HomePage() {
           globally, and keep more of every sale for a 1% processing fee.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link href="/demo">
-            <Button size="lg">Try the live checkout</Button>
-          </Link>
-          <Link href="/dashboard">
-            <Button size="lg" variant="secondary">
-              View merchant dashboard
-            </Button>
-          </Link>
+          <LinkButton href="/demo" size="lg">
+            Try the live checkout
+          </LinkButton>
+          <LinkButton href="/dashboard" size="lg" variant="secondary">
+            View merchant dashboard
+          </LinkButton>
         </div>
 
         <ul className="mt-12 flex flex-wrap gap-x-6 gap-y-2 border-t border-line pt-6 font-mono text-[12px] text-muted">

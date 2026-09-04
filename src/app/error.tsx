@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
 import { OraWordmark } from "@/components/brand/wordmark";
-import { Button } from "@/components/ui/button";
+import { Button, LinkButton } from "@/components/ui/button";
 
 export default function GlobalError({
   error,
@@ -34,9 +33,7 @@ export default function GlobalError({
           <Button variant="secondary" onClick={() => reset()}>
             Try again
           </Button>
-          <Link href="/dashboard">
-            <Button>Go to dashboard</Button>
-          </Link>
+          <LinkButton href="/dashboard">Go to dashboard</LinkButton>
         </div>
       </div>
     </div>
