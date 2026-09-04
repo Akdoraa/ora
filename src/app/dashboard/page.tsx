@@ -48,7 +48,7 @@ export default async function DashboardOverview() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
           label="Payment volume"
-          value={fmtMinor(ov.totalVolumeMinor, "GBP")}
+          value={fmtMinor(ov.totalVolumeMinor, ov.volumeCurrency)}
           sub={`${ov.paidCount} paid · ${ov.paymentsCount} total`}
         />
         <Stat
@@ -89,7 +89,7 @@ export default async function DashboardOverview() {
               label: s.day.slice(5),
               value: Number(s.volumeMinor) / 100,
             }))}
-            format={(n) => `£${Math.round(n).toLocaleString()}`}
+            format={(n) => fmtMinor(BigInt(Math.round(n * 100)), ov.volumeCurrency)}
           />
         </Card>
 

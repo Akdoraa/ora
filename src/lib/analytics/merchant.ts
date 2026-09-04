@@ -57,8 +57,12 @@ export async function merchantOverview(merchantId: string): Promise<MerchantOver
 
   return {
     merchant,
+    // in the merchant's own settlement currency (matching volumeCurrency
+    // below) — r.amount is the *presentment* amount (whatever currency the
+    // payer paid in, potentially different per intent) and would silently
+    // mislabel a presentment-currency sum as the settlement currency
     totalVolumeMinor: sum((r) =>
-      (PAID as readonly string[]).includes(r.status) ? r.amount : 0n,
+      (PAID as readonly string[]).includes(r.status) ? (r.settlementAmount ?? 0n) : 0n,
     ).toString(),
     volumeCurrency: merchant.settlementCurrency,
     paymentsCount: rows.length,
@@ -162,7 +166,10 @@ export async function merchantVolumeSeries(merchantId: string, days = 14) {
     .select({
       day: sql<string>`to_char(${schema.paymentIntents.createdAt}, 'YYYY-MM-DD')`,
       status: schema.paymentIntents.status,
-      amount: schema.paymentIntents.amount,
+      // settlement amount, not presentment — same reasoning as
+      // merchantOverview.totalVolumeMinor: this chart sits directly under
+      // the "Payment volume" stat and must report the same currency
+      settlementAmount: schema.paymentIntents.settlementAmount,
     })
     .from(schema.paymentIntents)
     .where(
@@ -179,7 +186,7 @@ export async function merchantVolumeSeries(merchantId: string, days = 14) {
   }
   for (const r of rows) {
     if ((PAID as readonly string[]).includes(r.status)) {
-      buckets.set(r.day, (buckets.get(r.day) ?? 0n) + r.amount);
+      buckets.set(r.day, (buckets.get(r.day) ?? 0n) + (r.settlementAmount ?? 0n));
     }
   }
   return [...buckets.entries()].map(([day, v]) => ({ day, volumeMinor: v.toString() }));
