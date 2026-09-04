@@ -221,7 +221,7 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
                 <Badge tone="neutral">idle</Badge>
               </div>
               <p className="mt-2 font-serif text-[15px] leading-relaxed text-muted">
-                Authorize on the left and Ora’s agent will parse the objective, compare qualified
+                Start the payment and Ora’s agent will parse the objective, compare qualified
                 routes, buy a signed FX quote over x402, and settle — pausing for your approval
                 where the policy requires it.
               </p>

@@ -88,6 +88,13 @@ pnpm test:e2e     # Playwright: landing -> checkout -> agent -> approve -> x402 
 
 ---
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Landing](docs/screenshots/01-landing.png) | ![Agent decision](docs/screenshots/02-agent-decision.png) |
+| ![Receipt](docs/screenshots/03-receipt.png) | ![Merchant dashboard](docs/screenshots/04-dashboard.png) |
+
 ## The demo scenario
 
 A UK business (**Kestrel Digital**, holds GBP) buys a **£4,250.00** market-
