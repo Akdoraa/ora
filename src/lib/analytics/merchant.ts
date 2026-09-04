@@ -134,11 +134,13 @@ export async function merchantSettlements(merchantId: string) {
 
 export async function merchantWebhookLog(merchantId: string, limit = 50) {
   const db = await getDb();
-  const endpoints = await db
+  // All endpoints (both scopes) so the delivery log covers every event,
+  // including ones sent to a payment intent's own one-off `webhookUrl`.
+  const allEndpoints = await db
     .select()
     .from(schema.webhookEndpoints)
     .where(eq(schema.webhookEndpoints.merchantId, merchantId));
-  const ids = endpoints.map((e) => e.id);
+  const ids = allEndpoints.map((e) => e.id);
   const deliveries = ids.length
     ? await db
         .select()
@@ -147,6 +149,9 @@ export async function merchantWebhookLog(merchantId: string, limit = 50) {
         .orderBy(desc(schema.webhookDeliveries.createdAt))
         .limit(limit)
     : [];
+  // Only real standing subscriptions belong in "manage subscriptions" UI —
+  // a per-intent one-off destination isn't something to Pause/Resume.
+  const endpoints = allEndpoints.filter((e) => e.scope === "merchant");
   return { endpoints, deliveries };
 }
 

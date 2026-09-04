@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
 import { newId } from "@/lib/ids";
 import { logger } from "@/lib/logger";
@@ -22,10 +22,17 @@ async function endpointsFor(intentId: string): Promise<
   const db = await getDb();
   const intent = await getIntent(intentId);
   if (!intent) return [];
+  // Only real, standing subscriptions fire for every intent. A past intent's
+  // one-off `scope: "intent"` endpoint must never fan out to *this* intent.
   const configured = await db
     .select()
     .from(schema.webhookEndpoints)
-    .where(eq(schema.webhookEndpoints.merchantId, intent.merchantId));
+    .where(
+      and(
+        eq(schema.webhookEndpoints.merchantId, intent.merchantId),
+        eq(schema.webhookEndpoints.scope, "merchant"),
+      ),
+    );
 
   const list = configured
     .filter((e) => e.active)
@@ -168,6 +175,7 @@ async function ensureIntentEndpoint(t: { id: string; url: string; secret: string
     secret: t.secret,
     enabledEvents: ["*"],
     active: true,
+    scope: "intent",
   });
   return t.id;
 }

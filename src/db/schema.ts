@@ -598,6 +598,11 @@ export const webhookEndpoints = pgTable("webhook_endpoints", {
   secret: text("secret").notNull(),
   enabledEvents: jsonb("enabled_events").$type<string[]>().notNull(),
   active: boolean("active").notNull().default(true),
+  // "merchant": a real, standing subscription (dashboard-managed) that
+  // receives every event for the merchant. "intent": a one-off destination
+  // created from a single Payment Intent's `webhookUrl` — must never be
+  // treated as a merchant-wide subscriber to *other* intents' events.
+  scope: text("scope").notNull().default("merchant"),
   createdAt,
 });
 

@@ -3,6 +3,7 @@ import { DashboardShell } from "@/components/dashboard/shell";
 import { Card, Hairline, Badge, Row } from "@/components/ui/primitives";
 import { CopyBlock } from "@/components/dashboard/copy-block";
 import { WebhookRow } from "@/components/dashboard/webhook-row";
+import { WebhookEndpoints } from "@/components/dashboard/webhook-endpoints";
 import { merchantWebhookLog } from "@/lib/analytics/merchant";
 import { currentMerchantId, DEMO_API_KEY } from "@/lib/dashboard";
 import { seedId } from "@/lib/ids";
@@ -118,6 +119,17 @@ export default async function DevelopersPage() {
           <Hairline />
           <CopyBlock code={CURL(base, DEMO_API_KEY)} lang="bash" />
         </Card>
+      </div>
+
+      <div className="mt-4">
+        <WebhookEndpoints
+          endpoints={endpoints.map((e) => ({
+            id: e.id,
+            url: e.url,
+            active: e.active,
+            enabledEvents: e.enabledEvents ?? [],
+          }))}
+        />
       </div>
 
       <Card className="mt-4 overflow-hidden">

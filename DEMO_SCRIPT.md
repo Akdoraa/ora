@@ -62,3 +62,27 @@ pnpm demo:run       # terminal 2
 ```
 Prints each step and the two real transaction hashes, and appends them to
 `docs/evidence/xrpl-transactions.md`.
+
+### Failure & edge-case demos
+
+The hosted checkout renders every terminal state correctly (see
+`src/components/checkout/checkout-client.tsx`), but only the happy path is
+reachable by clicking through the UI — failures are triggered via the API's
+`bankSimulation` param so the demo checkout itself stays uncluttered by a "make
+this fail" button. To show a judge a failure path:
+
+```bash
+# create a fresh intent, then force the bank leg to decline:
+curl -sX POST localhost:3000/api/payment-intents/<id>/run -H "content-type: application/json" \
+  -d '{"objective":"Pay this today, keep cost under 1%, settle in 60s","bankSimulation":"fail"}'
+# -> { "status": "failed", "error": "bank declined the authorization (insufficient funds)",
+#      "failedStep": "confirmBankAuthorization" }
+# GET .../status now reports "authorization_failed" with that reason.
+```
+
+Swap `"fail"` for `"expire"` to see the `expired` path instead. A rejected
+human approval (`POST .../approve {"decision":"reject"}`) demonstrates
+`cancelled`. A refund on any `paid`/`delivered` intent
+(`POST .../refund`) demonstrates the reversal path, including a real on-chain
+refund transaction — see `/dashboard/payments/<id>` afterward for the ledger
+entries and audit trail.
