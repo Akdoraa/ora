@@ -32,10 +32,12 @@ export async function processRefund(params: {
   const db = await getDb();
   const intent = await getIntent(params.intentId);
   if (!intent) throw new Error(`intent ${params.intentId} not found`);
-  if (!["paid", "delivered", "partially_refunded"].includes(intent.status)) {
-    throw new Error(`cannot refund an intent in status ${intent.status}`);
-  }
 
+  // Idempotency comes first, before the status guard: a caller retrying
+  // (e.g. after a timeout) with the same key must get back the refund it
+  // already triggered, even though `processRefund` itself has since moved
+  // the intent's status to "refunded" or "partially_refunded" — which
+  // would otherwise fail the status check below on every retry.
   if (params.idempotencyKey) {
     const [prior] = await db
       .select()
@@ -49,6 +51,10 @@ export async function processRefund(params: {
         amount: money(prior.amount, prior.currency),
       };
     }
+  }
+
+  if (!["paid", "delivered", "partially_refunded"].includes(intent.status)) {
+    throw new Error(`cannot refund an intent in status ${intent.status}`);
   }
 
   const [merchant] = await db
