@@ -40,16 +40,19 @@ test("full commercial loop", async ({ page }) => {
   });
   await expect(page.getByRole("heading", { name: "Payment complete" })).toBeVisible();
   await expect(page.getByText("Saved vs card")).toBeVisible();
-  await expect(page.getByText("SGD 7,")).toBeVisible();
+  await expect(page.getByText("SGD 7,203.19", { exact: true }).first()).toBeVisible();
 
   // 7 — settlement details carry both real tx hashes
-  await page.getByText("Settlement details").click();
+  await page.locator("summary", { hasText: "Settlement details" }).click();
   await expect(page.getByText("XRPL settlement")).toBeVisible();
   await expect(page.getByText("x402 quote payment")).toBeVisible();
 
-  // 8 — verify a hash via the public endpoint
-  const settlementLink = page.getByRole("link", { name: /✓$/ }).last();
-  const href = await settlementLink.getAttribute("href");
+  // 8 — verify a settlement hash via the public endpoint
+  const explorerLink = page
+    .locator('a[href*="/transactions/"]')
+    .filter({ hasText: "✓" })
+    .last();
+  const href = await explorerLink.getAttribute("href");
   const hash = href!.split("/transactions/")[1]!;
   const verify = await page.request.get(`/api/xrpl/transactions/${hash}`);
   expect(verify.ok()).toBeTruthy();
@@ -58,7 +61,10 @@ test("full commercial loop", async ({ page }) => {
   // 9 — merchant dashboard reflects the payment
   await page.goto("/dashboard");
   await expect(page.getByText("Saved vs card (4%)")).toBeVisible();
+  await expect(page.getByText("Recent payments")).toBeVisible();
+
   await page.goto(`/dashboard/payments/${intentId}`);
-  await expect(page.getByText("delivered")).toBeVisible();
-  await expect(page.getByText("settlement.succeeded")).toBeVisible();
+  await expect(page.getByText("delivered").first()).toBeVisible();
+  await expect(page.getByText("settlement.succeeded").first()).toBeVisible();
+  await expect(page.getByText("Audit trail")).toBeVisible();
 });
