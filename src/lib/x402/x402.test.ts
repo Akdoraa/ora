@@ -85,4 +85,37 @@ describe("signed FX quote", () => {
     expect(Number(q.amountOutMinor)).toBeLessThan(725_000);
     expect(q.effectiveRate.startsWith("1.711")).toBe(true);
   });
+
+  it("regression: prices a 2dp -> 0dp pair correctly instead of assuming both sides are 2dp", () => {
+    // GBP (2dp) -> JPY (0dp), no spread/fee for a clean check: 1000.00 GBP
+    // at rate 190 should be exactly 190,000 JPY (JPY minor units == major
+    // units). A hardcoded /100...*100 conversion — right for GBP/SGD purely
+    // because both sides happen to be 2dp — priced this 100x too high.
+    const q = computeQuote({
+      paymentIntentId: "pi_jpy_test",
+      amountInMinor: "100000", // £1,000.00
+      amountInCurrency: "GBP",
+      amountOutCurrency: "JPY",
+      midRate: "190",
+      fxSpreadBps: 0,
+      processingFeeBps: 0,
+    });
+    expect(q.amountOutMinor).toBe("190000");
+  });
+
+  it("regression: prices a 0dp -> 2dp pair correctly (the mirror case)", () => {
+    // JPY (0dp) -> GBP (2dp): ¥190,000 at rate (1/190) should be exactly
+    // £1,000.00 = 100,000 minor units. The old formula would have produced
+    // 100x too little here.
+    const q = computeQuote({
+      paymentIntentId: "pi_jpy_test_2",
+      amountInMinor: "190000", // ¥190,000 (JPY has no minor-unit distinction)
+      amountInCurrency: "JPY",
+      amountOutCurrency: "GBP",
+      midRate: (1 / 190).toFixed(10),
+      fxSpreadBps: 0,
+      processingFeeBps: 0,
+    });
+    expect(q.amountOutMinor).toBe("100000");
+  });
 });

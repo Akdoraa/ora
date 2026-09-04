@@ -4,6 +4,7 @@ import { getDb, schema } from "@/db/client";
 import { newId } from "@/lib/ids";
 import { logger } from "@/lib/logger";
 import { NETWORK, explorerTxUrl } from "@/lib/xrpl/network";
+import { exponentOf } from "@/lib/money/currency";
 import { verifyAndSettle } from "./facilitator";
 import { buildQuoteRequirement } from "./server";
 import { signQuote, type SignedFxQuote, type SignedQuoteEnvelope } from "./quote";
@@ -34,11 +35,17 @@ export function computeQuote(req: QuoteRequest): SignedFxQuote {
     .div(10_000)
     .toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
   const convertibleMinor = new Decimal(req.amountInMinor).minus(feeMinor);
-  // presentment & settlement both 2dp in the demo
+  // minor -> major (divide by the INPUT currency's exponent), apply the
+  // rate, major -> minor (multiply by the OUTPUT currency's exponent).
+  // Every currency the demo actually prices happens to be 2dp, where this
+  // and a currency-blind `.times(effectiveRate)` give the same answer —
+  // but JPY (0dp) is a supported currency too (isSupportedCurrency), and a
+  // hardcoded /100...*100 here previously priced any 2dp<->0dp pair 100x
+  // wrong in whichever direction the mismatch ran.
   const amountOutMinor = convertibleMinor
-    .div(100)
+    .div(new Decimal(10).pow(exponentOf(req.amountInCurrency)))
     .times(effectiveRate)
-    .times(100)
+    .times(new Decimal(10).pow(exponentOf(req.amountOutCurrency)))
     .toDecimalPlaces(0, Decimal.ROUND_HALF_EVEN);
 
   return {
