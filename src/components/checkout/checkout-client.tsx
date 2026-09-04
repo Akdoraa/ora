@@ -153,7 +153,7 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
           </p>
 
           {/* primary action / state */}
-          <div className="mt-5">
+          <div className="mt-5" aria-live="polite" aria-atomic="true">
             {status === "created" && (
               <Button full size="lg" onClick={run} loading={busy === "run"}>
                 Authorize with Ora agent
@@ -162,7 +162,7 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
 
             {running && status !== "awaiting_agent_approval" && (
               <div className="flex items-center gap-2.5 rounded-xl bg-[#f3f1ec] px-3.5 py-3 text-sm text-ink-soft">
-                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-ink/30 border-t-ink" />
+                <span aria-hidden className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-ink/30 border-t-ink" />
                 <StatusLine status={status} />
               </div>
             )}

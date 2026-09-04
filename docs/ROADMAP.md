@@ -28,8 +28,9 @@
   `RouteProvider`, agent negotiation.
 - `ComplianceProvider` boundary: KYB on merchant onboarding, sanctions + KYC on
   first payout to a new payee.
-- Webhook management UI (add/rotate endpoints, per-event subscriptions),
-  signed-payload verifier snippet in more languages.
+- Per-event webhook subscriptions (endpoint management — add/pause/resume,
+  scoped merchant vs. per-intent delivery — already ships in
+  `/dashboard/developers`), signed-payload verifier snippet in more languages.
 - Multi-region liquidity pools + an FX position/risk view on the ledger.
 
 **Longer term**

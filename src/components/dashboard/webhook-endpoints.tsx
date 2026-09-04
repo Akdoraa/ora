@@ -74,6 +74,7 @@ export function WebhookEndpoints({ endpoints }: { endpoints: WebhookEndpointRow[
               </Badge>
               <button
                 onClick={() => toggle(e.id, e.active)}
+                aria-label={`${e.active ? "Pause" : "Resume"} webhook endpoint ${e.url}`}
                 className="rounded-full border border-line-strong px-2.5 py-1 text-[11px] text-ink-soft hover:bg-sky-50"
               >
                 {e.active ? "Pause" : "Resume"}
@@ -87,7 +88,11 @@ export function WebhookEndpoints({ endpoints }: { endpoints: WebhookEndpointRow[
       </div>
       <Hairline />
       <form onSubmit={addEndpoint} className="flex flex-wrap items-center gap-2 px-5 py-4">
+        <label className="sr-only" htmlFor="webhook-endpoint-url">
+          Webhook endpoint URL
+        </label>
         <input
+          id="webhook-endpoint-url"
           type="url"
           required
           placeholder="https://your-app.example/webhooks/ora"
