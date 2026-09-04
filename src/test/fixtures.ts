@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { getDb, schema } from "@/db/client";
 import { seedId, newId } from "@/lib/ids";
 
@@ -19,6 +20,26 @@ export async function createMerchant(overrides: Partial<typeof schema.merchants.
     })
     .onConflictDoNothing();
   return id;
+}
+
+/** Inserts an API key row and returns the plaintext token to send as a Bearer header. */
+export async function createApiKey(
+  overrides: Partial<typeof schema.apiKeys.$inferInsert> & { merchantId: string },
+) {
+  const db = await getDb();
+  const id = overrides.id ?? newId("key");
+  const token = `ora_sk_test_${newId("key").split("_")[1]}`;
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  await db.insert(schema.apiKeys).values({
+    id,
+    name: "test key",
+    prefix: token.slice(0, 16),
+    tokenHash,
+    lastFour: token.slice(-4),
+    livemode: false,
+    ...overrides,
+  });
+  return { id, token };
 }
 
 export async function createAgentPolicy(
