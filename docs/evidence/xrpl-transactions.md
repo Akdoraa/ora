@@ -25,3 +25,8 @@ used automatically for any wallet that carries an RLUSD balance, and on Mainnet.
 
 The full seeded demo produces two more (the x402 quote payment and the merchant settlement) —
 appended here by `scripts/run-demo.ts`.
+
+### run-demo 2026-09-04
+- payment intent `pi_a1b05da62ccqgpd10kjmmnrp` — delivered
+- x402 quote payment: `D79D3181723A9E6367D9E54A33AD5C7E1A031CA1FB2969B23B69D880E68E5E7F` — https://testnet.xrpl.org/transactions/D79D3181723A9E6367D9E54A33AD5C7E1A031CA1FB2969B23B69D880E68E5E7F
+- settlement: `D002343A024C92E840A8A1D951DB37EC26EB3340F2B846218115818B805F3081` — https://testnet.xrpl.org/transactions/D002343A024C92E840A8A1D951DB37EC26EB3340F2B846218115818B805F3081

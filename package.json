@@ -29,6 +29,7 @@
     "xrpl:setup": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/xrpl-setup.ts",
     "xrpl:smoke": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/xrpl-smoke.ts",
     "x402:smoke": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/x402-smoke.ts",
+    "demo:run": "tsx --env-file-if-exists=.env.local --env-file-if-exists=.env scripts/run-demo.ts",
     "format": "prettier --write ."
   },
   "dependencies": {
