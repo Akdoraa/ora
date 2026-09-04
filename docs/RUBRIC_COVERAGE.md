@@ -60,7 +60,7 @@ Evidence mapped to each criterion. Paths are in this repo; hashes in
 | Transaction verification | `verifyTransactionByHash` (independent `tx` re-read) before fulfilment |
 | Actual transaction hashes | stored on `xrpl_transactions`, shown in UI + `GET /api/xrpl/transactions/:hash` |
 | Audit trail | append-only `audit_events` |
-| Tests | Vitest (money, state machine, ledger incl. full lifecycle + refund, routing, policy, webhook sig, x402 challenge, idempotency) + one Playwright E2E |
+| Tests | Vitest — 180 tests / 26 files: money, state machine, ledger incl. full lifecycle + refund, routing, policy, webhook sig + delivery + replay, x402 challenge/facilitator/FX pricing, idempotency, bank-rails, and every API route (payment-intents create/read/run/approve/refund, agent-policies, webhook-endpoints, payment-links, fulfilment, XRPL tx lookup) — plus one Playwright E2E hitting real Testnet |
 | Secure wallet separation | server-only seeds, local signing, pino redaction |
 | Failure recovery | every failure → defined state + webhook |
 
