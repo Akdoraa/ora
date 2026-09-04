@@ -12,7 +12,13 @@ import {
 } from "@/lib/policies/policy";
 import type { EvaluatedRoute } from "@/lib/routing/types";
 import type { AgentPolicy, Merchant, PaymentIntent } from "@/db/schema";
+import Decimal from "decimal.js";
+import { logger } from "@/lib/logger";
 
+// Curated demo mid-rates for the pairs the seeded scenario actually exercises —
+// kept exact so the recorded evidence (docs/evidence/, README figures) never
+// drifts. Anything else derives from RATE_VS_USD below rather than silently
+// defaulting to 1:1.
 const DEMO_MID_RATE: Record<string, string> = {
   "GBP/SGD": "1.7180",
   "GBP/USD": "1.2700",
@@ -20,8 +26,36 @@ const DEMO_MID_RATE: Record<string, string> = {
   "EUR/SGD": "1.4600",
 };
 
+// Demo-only cross-rates (1 unit of X in USD) covering every currency the
+// checkout / payment-link UI offers, so an uncurated pair still gets a
+// plausible rate instead of silently pricing at 1:1.
+const RATE_VS_USD: Record<string, string> = {
+  USD: "1",
+  GBP: "1.2700",
+  EUR: "1.0850",
+  SGD: "0.7396",
+  AUD: "0.6500",
+  HKD: "0.1280",
+  JPY: "0.0067",
+};
+
 export function midRateFor(from: string, to: string): string {
-  return DEMO_MID_RATE[`${from}/${to}`] ?? "1.0000";
+  const f = from.toUpperCase();
+  const t = to.toUpperCase();
+  if (f === t) return "1.0000";
+
+  const direct = DEMO_MID_RATE[`${f}/${t}`];
+  if (direct) return direct;
+
+  const inverse = DEMO_MID_RATE[`${t}/${f}`];
+  if (inverse) return new Decimal(1).div(inverse).toFixed(8);
+
+  const fUsd = RATE_VS_USD[f];
+  const tUsd = RATE_VS_USD[t];
+  if (fUsd && tUsd) return new Decimal(fUsd).div(tUsd).toFixed(8);
+
+  logger.warn({ from: f, to: t }, "midRateFor: no demo rate for this pair, defaulting to 1:1");
+  return "1.0000";
 }
 
 /** discoverMerchantOffer — the agent reads the merchant's machine-readable offer. */
