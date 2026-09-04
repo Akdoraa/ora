@@ -49,6 +49,27 @@ export function DashboardShell({
           </div>
           <span className="font-mono text-[11px] text-faint">Marina Analytics · demo</span>
         </div>
+        {/* mobile: the pill nav above is hidden below md, so it needs a reachable
+            equivalent here — a horizontally-scrollable strip, not a dead end. */}
+        <nav
+          aria-label="Dashboard sections"
+          className="flex gap-1 overflow-x-auto px-6 pb-3 md:hidden"
+        >
+          {NAV.map(([label, href]) => (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                "shrink-0 rounded-full px-3 py-1.5 text-[13px] transition",
+                active === href
+                  ? "bg-ink text-paper"
+                  : "border border-line-strong text-muted hover:bg-sky-50 hover:text-ink",
+              )}
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
       </header>
 
       <main className="mx-auto max-w-6xl px-6 py-8">

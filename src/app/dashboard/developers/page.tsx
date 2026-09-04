@@ -138,34 +138,36 @@ export default async function DevelopersPage() {
           </span>
         </div>
         <Hairline />
-        <table className="w-full text-sm">
-          <tbody>
-            {deliveries.map((d) => (
-              <WebhookRow
-                key={d.id}
-                d={{
-                  id: d.id,
-                  eventType: d.eventType,
-                  signature: d.signature,
-                  status: d.status,
-                  responseStatus: d.responseStatus,
-                  attempts: d.attempts,
-                  createdAt: d.createdAt.toISOString(),
-                }}
-              />
-            ))}
-            {deliveries.length === 0 && (
-              <tr>
-                <td className="px-5 py-6 text-sm text-muted" colSpan={6}>
-                  No deliveries yet.{" "}
-                  <Link href="/demo" className="text-brand hover:underline">
-                    Run the demo →
-                  </Link>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-sm">
+            <tbody>
+              {deliveries.map((d) => (
+                <WebhookRow
+                  key={d.id}
+                  d={{
+                    id: d.id,
+                    eventType: d.eventType,
+                    signature: d.signature,
+                    status: d.status,
+                    responseStatus: d.responseStatus,
+                    attempts: d.attempts,
+                    createdAt: d.createdAt.toISOString(),
+                  }}
+                />
+              ))}
+              {deliveries.length === 0 && (
+                <tr>
+                  <td className="px-5 py-6 text-sm text-muted" colSpan={6}>
+                    No deliveries yet.{" "}
+                    <Link href="/demo" className="text-brand hover:underline">
+                      Run the demo →
+                    </Link>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       <p className="mt-3 text-[11px] text-faint">

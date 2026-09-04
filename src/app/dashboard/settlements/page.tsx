@@ -44,50 +44,56 @@ export default async function SettlementsPage() {
       </Card>
 
       <Card className="overflow-hidden">
-        <div className="grid grid-cols-[minmax(0,1fr)_120px_120px_110px_130px] gap-2 px-5 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">
-          <span>Payment</span>
-          <span className="text-right">Gross</span>
-          <span className="text-right">Net paid</span>
-          <span className="text-right">XRPL</span>
-          <span className="text-right">Status</span>
-        </div>
-        <Hairline />
-        {settlements.map((s) => (
-          <div
-            key={s.id}
-            className="grid grid-cols-[minmax(0,1fr)_120px_120px_110px_130px] items-center gap-2 border-t border-line px-5 py-3 text-sm first:border-0"
-          >
-            <Link
-              href={`/dashboard/payments/${s.paymentIntentId}`}
-              className="truncate font-mono text-[12px] text-ink hover:underline"
-            >
-              {s.paymentIntentId}
-            </Link>
-            <span className="text-right font-mono text-[13px]">
-              {fmtMinor(s.grossAmount, s.grossCurrency)}
-            </span>
-            <span className="text-right font-mono text-[13px]">
-              {fmtMinor(s.netAmount, s.netCurrency)}
-            </span>
-            <span className="text-right font-mono text-[12px]">
-              {s.xrplTransaction?.txHash ? (
-                <a
-                  href={s.xrplTransaction.explorerUrl ?? "#"}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-brand underline decoration-brand/30 underline-offset-2"
+        <div className="overflow-x-auto">
+          <div className="min-w-[640px]">
+            <div className="grid grid-cols-[minmax(0,1fr)_120px_120px_110px_130px] gap-2 px-5 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">
+              <span>Payment</span>
+              <span className="text-right">Gross</span>
+              <span className="text-right">Net paid</span>
+              <span className="text-right">XRPL</span>
+              <span className="text-right">Status</span>
+            </div>
+            <Hairline />
+            {settlements.map((s) => (
+              <div
+                key={s.id}
+                className="grid grid-cols-[minmax(0,1fr)_120px_120px_110px_130px] items-center gap-2 border-t border-line px-5 py-3 text-sm first:border-0"
+              >
+                <Link
+                  href={`/dashboard/payments/${s.paymentIntentId}`}
+                  className="truncate font-mono text-[12px] text-ink hover:underline"
                 >
-                  {shortHash(s.xrplTransaction.txHash, 6, 4)}
-                </a>
-              ) : (
-                "—"
-              )}
-            </span>
-            <span className="text-right">
-              <Badge tone={s.status === "settled" ? "positive" : "warning"}>{s.status}</Badge>
-            </span>
+                  {s.paymentIntentId}
+                </Link>
+                <span className="text-right font-mono text-[13px]">
+                  {fmtMinor(s.grossAmount, s.grossCurrency)}
+                </span>
+                <span className="text-right font-mono text-[13px]">
+                  {fmtMinor(s.netAmount, s.netCurrency)}
+                </span>
+                <span className="text-right font-mono text-[12px]">
+                  {s.xrplTransaction?.txHash && s.xrplTransaction.explorerUrl ? (
+                    <a
+                      href={s.xrplTransaction.explorerUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-brand underline decoration-brand/30 underline-offset-2"
+                    >
+                      {shortHash(s.xrplTransaction.txHash, 6, 4)}
+                    </a>
+                  ) : s.xrplTransaction?.txHash ? (
+                    shortHash(s.xrplTransaction.txHash, 6, 4)
+                  ) : (
+                    "—"
+                  )}
+                </span>
+                <span className="text-right">
+                  <Badge tone={s.status === "settled" ? "positive" : "warning"}>{s.status}</Badge>
+                </span>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
         {settlements.length === 0 && (
           <div className="px-5 py-8 text-sm text-muted">No settlements yet.</div>
         )}
