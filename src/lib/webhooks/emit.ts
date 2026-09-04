@@ -126,17 +126,24 @@ export async function emitWebhook(
   for (const t of targets) {
     const deliveryId = newId("whd");
     try {
-      await db.insert(schema.webhookDeliveries).values({
-        id: deliveryId,
-        endpointId: t.id.startsWith("whe_intent_") ? await ensureIntentEndpoint(t) : t.id,
-        paymentIntentId: intentId,
-        eventType: type,
-        eventId: event.id,
-        payload: event as unknown as Record<string, unknown>,
-        signature: signWebhook(t.secret, body),
-        status: "pending",
-      });
-      await attemptDelivery(deliveryId);
+      const endpointId = t.id.startsWith("whe_intent_")
+        ? await ensureIntentEndpoint(t)
+        : t.id;
+      const inserted = await db
+        .insert(schema.webhookDeliveries)
+        .values({
+          id: deliveryId,
+          endpointId,
+          paymentIntentId: intentId,
+          eventType: type,
+          eventId: event.id,
+          payload: event as unknown as Record<string, unknown>,
+          signature: signWebhook(t.secret, body),
+          status: "pending",
+        })
+        .onConflictDoNothing()
+        .returning({ id: schema.webhookDeliveries.id });
+      if (inserted[0]) await attemptDelivery(inserted[0].id);
     } catch (err) {
       logger.error({ err, intentId, type }, "webhook emit failed");
     }
