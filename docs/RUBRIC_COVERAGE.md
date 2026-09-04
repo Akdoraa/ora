@@ -14,8 +14,9 @@ Evidence mapped to each criterion. Paths are in this repo; hashes in
 | Multi-currency architecture | `Money` (bigint + ISO), `CURRENCY_EXPONENT`, FX via `convert`/`applyBps`; demo is GBP→SGD, routes + policy are currency-generic |
 | Provider adapters | `BankRailProvider` interface + `DemoBankProvider`; `docs/BANK_BOUNDARY.md` documents licensed-partner adapters |
 | Scalable merchant onboarding | merchant + API key + product + webhook rows; `POST /api/payment-links` |
+| Configurable agent controls | `/dashboard/agent-console` — live edit of max payment, daily spend, auto-approve threshold, FX/fee ceilings, settlement time, new-payee approval (`PATCH /api/agent-policies/:id`, validated: auto-approve can't exceed the per-payment cap) |
 | Compliance boundaries | `docs/BANK_BOUNDARY.md`, `docs/SECURITY.md` (KYC/KYB + sanctions boundary) |
-| Developer accessibility | `/dashboard/developers` — masked key, TS + curl snippets, x402 example, manifest, live webhook log; `docs/API.md` |
+| Developer accessibility | `/dashboard/developers` — masked key, TS + curl snippets, x402 example, manifest, webhook endpoint management (add/pause/resume, secret shown once) + live signed delivery log with replay; `docs/API.md` |
 | Plausible verticals | B2B invoices (demo), SaaS renewals, marketplace payouts, logistics, professional services, autonomous procurement agents |
 
 ## Creativity (20%)
