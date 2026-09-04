@@ -9,13 +9,19 @@ for (const file of [".env.local", ".env"]) {
   }
 }
 
+const url = process.env.DATABASE_URL;
+const usePg = !!url && /^postgres(ql)?:\/\//.test(url);
+
 export default defineConfig({
   schema: "./src/db/schema.ts",
   out: "./drizzle",
   dialect: "postgresql",
-  dbCredentials: {
-    url: process.env.DATABASE_URL ?? "postgresql://ora:ora@localhost:5432/ora",
-  },
+  ...(usePg
+    ? { dbCredentials: { url: url! } }
+    : {
+        driver: "pglite",
+        dbCredentials: { url: process.env.PGLITE_DATA_DIR ?? "./.pglite" },
+      }),
   strict: true,
   verbose: true,
 });

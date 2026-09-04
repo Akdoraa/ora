@@ -33,3 +33,4 @@ blob-report
 .idea
 .vscode/*
 !.vscode/extensions.json
+.pglite

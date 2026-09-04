@@ -16,10 +16,11 @@ const clientSchema = z.object({
 
 const serverSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  DATABASE_URL: z
-    .string()
-    .url()
-    .default("postgresql://ora:ora@localhost:5432/ora"),
+  // Unset => embedded PGlite (zero-infra local dev). Set to a `postgres://` /
+  // `postgresql://` URL (e.g. Neon in prod, or the docker-compose Postgres) to
+  // use node-postgres instead.
+  DATABASE_URL: z.string().min(1).optional(),
+  PGLITE_DATA_DIR: z.string().default("./.pglite"),
   APP_URL: z.string().url().default("http://localhost:3000"),
   SESSION_SECRET: z
     .string()
@@ -92,6 +93,11 @@ function parseEnv() {
 }
 
 export const env = parseEnv();
+
+export const dbDriver: "pg" | "pglite" =
+  isServer && env.DATABASE_URL && /^postgres(ql)?:\/\//.test(env.DATABASE_URL)
+    ? "pg"
+    : "pglite";
 
 export const agentModeResolved: "live" | "demo" =
   env.AGENT_MODE === "auto"
