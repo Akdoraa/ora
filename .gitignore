@@ -1,9 +1,35 @@
+# dependencies
 node_modules
-dist
+.pnpm-store
+
+# next.js / build
 .next
-coverage
+out
+build
+dist
+*.tsbuildinfo
+next-env.d.ts
+
+# env — never commit secrets (see .env.example)
 .env
-.env.local
+.env.*
+!.env.example
+
+# test / coverage
+coverage
+playwright-report
+test-results
+blob-report
+
+# deploy
+.vercel
+
+# xrpl feedback hook (per-user config lives in ~/.xrpl-feedback-hook.json, not here)
+
+# misc
 *.log
 .DS_Store
 .turbo
+.idea
+.vscode/*
+!.vscode/extensions.json
