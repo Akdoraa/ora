@@ -5,6 +5,7 @@ const BASE_URL = process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  globalSetup: "./tests/e2e/global-setup.ts",
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -21,9 +22,13 @@ export default defineConfig({
   webServer: process.env.E2E_NO_SERVER
     ? undefined
     : {
-        command: `pnpm run start -- --port ${PORT}`,
+        command: `pnpm exec next start -p ${PORT}`,
         url: BASE_URL,
         timeout: 120_000,
         reuseExistingServer: !process.env.CI,
+        env: {
+          APP_URL: BASE_URL,
+          NEXT_PUBLIC_APP_URL: BASE_URL,
+        },
       },
 });

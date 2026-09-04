@@ -12,8 +12,13 @@ export function parseObjectiveHeuristically(
   const text = objective.replace(/\s+/g, " ").trim();
   const out: ParsedConstraints = {};
 
-  const cur = text.match(/receive\s+(?:in\s+)?([A-Z]{3})\b/);
-  out.requiredSettlementCurrency = (cur?.[1] ?? defaults.settlementCurrency).toUpperCase();
+  const KNOWN = ["GBP", "SGD", "USD", "EUR", "AUD", "HKD", "JPY"];
+  const cur =
+    text.match(/(?:receive|send|pay(?:ing)?|settle)\s+(?:in\s+)?([A-Z]{3})\b/) ??
+    text.match(new RegExp(`\\b(${KNOWN.join("|")})\\b`));
+  out.requiredSettlementCurrency = (
+    cur?.[1] ?? defaults.settlementCurrency
+  ).toUpperCase();
 
   const feePct = text.match(/(?:processing\s+(?:cost|fee)[^%\d]*)([\d.]+)\s*%/i);
   if (feePct) out.maxProcessingFeeBps = Math.round(parseFloat(feePct[1]!) * 100);

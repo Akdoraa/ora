@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "src/app/api/payment-intents/[id]/run/route.ts": { "maxDuration": 120 },
+    "src/app/api/payment-intents/[id]/approve/route.ts": { "maxDuration": 120 },
+    "src/app/api/payment-intents/[id]/refund/route.ts": { "maxDuration": 60 },
+    "src/app/api/x402/quote/route.ts": { "maxDuration": 60 }
+  }
+}
