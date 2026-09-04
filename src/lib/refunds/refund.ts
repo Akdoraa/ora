@@ -96,6 +96,7 @@ export async function processRefund(params: {
 
   // on-chain refund: settlement wallet -> payer agent wallet (Testnet, XRP)
   let xrplTxHash: string | undefined;
+  let xrplTransactionId: string | undefined;
   let explorerUrl: string | undefined;
   try {
     const exec = await executePayment({
@@ -109,6 +110,7 @@ export async function processRefund(params: {
       guard: { allowedAssets: ["XRP", "RLUSD"] },
     });
     xrplTxHash = exec.hash;
+    xrplTransactionId = exec.xrplTransactionId;
     explorerUrl = exec.explorerUrl;
   } catch (err) {
     logger.warn({ err, intentId: params.intentId }, "on-chain refund leg failed (ledger reversal stands)");
@@ -118,7 +120,7 @@ export async function processRefund(params: {
     .update(schema.refunds)
     .set({
       status: "succeeded",
-      xrplTransactionId: xrplTxHash ? undefined : undefined,
+      xrplTransactionId,
       ledgerTransactionId: ledger.ledgerTransactionId,
       processedAt: new Date(),
     })
