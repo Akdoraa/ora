@@ -1,13 +1,15 @@
 import type { Money } from "@/lib/money/money";
 
-export type RouteKind = "domestic_rail" | "xrpl_rlusd" | "card_network" | "swift_wire";
+export type RouteKind = "xrpl_rlusd" | "xrpl_amm" | "xrpl_orderbook";
 
 export interface RouteQuote {
   key: string;
   kind: RouteKind;
   provider: string;
   displayName: string;
-  /** true => a clearly-labelled demo/competitor quotation, not live market data */
+  /** always false now — every candidate is either Ora's own quoted rate or a
+   * live XRPL AMM/order-book read; kept only so older stored rows still
+   * deserialize. */
   isSynthetic: boolean;
 
   processingFeeBps: number;

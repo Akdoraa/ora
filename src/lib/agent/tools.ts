@@ -3,7 +3,8 @@ import { getDb, schema } from "@/db/client";
 import { newId } from "@/lib/ids";
 import { toJsonb } from "@/lib/json";
 import { money, formatMoney, toDecimalString } from "@/lib/money/money";
-import { buildCandidateRoutes } from "@/lib/routing/routes";
+import { buildCandidateRoutes, quoteLiveRoute, rlusdTargetFor, type QuoteInputs } from "@/lib/routing/routes";
+import { liveAmmQuoteForRlusdOut, liveOrderBookQuoteForRlusdOut } from "@/lib/routing/xrpl-market";
 import { evaluateRoutes, selectRoute } from "@/lib/routing/qualify";
 import {
   effectiveConstraints,
@@ -73,15 +74,50 @@ export function discoverMerchantOffer(intent: PaymentIntent, merchant: Merchant)
   };
 }
 
-/** listQualifiedRoutes — build candidate routes and persist them. */
+/**
+ * listQualifiedRoutes — build candidate routes and persist them.
+ *
+ * One candidate (Ora's own RLUSD inventory) needs no network call and is
+ * always present. The other two are read live off the actual XRPL ledger
+ * right now — the AMM pool's real reserves/fee (amm_info) and the native
+ * order book's real depth (book_offers) — sized to the RLUSD this exact
+ * payment needs. Never fabricated: if either query fails or the ledger
+ * can't fill the amount, that candidate just isn't offered this run.
+ */
 export async function listAndPersistRoutes(intent: PaymentIntent, merchant: Merchant) {
   const db = await getDb();
-  const candidates = buildCandidateRoutes({
+  const quoteInputs: QuoteInputs = {
     gross: money(intent.amount, intent.currency),
     settlementCurrency: intent.settlementCurrency,
     midRate: midRateFor(intent.currency, intent.settlementCurrency),
     cardBaselineBps: merchant.cardBaselineBps,
-  });
+  };
+
+  const direct = buildCandidateRoutes(quoteInputs);
+  const rlusdTarget = rlusdTargetFor(quoteInputs, midRateFor(intent.currency, "USD"));
+
+  const [ammLive, bookLive] = await Promise.all([
+    liveAmmQuoteForRlusdOut(rlusdTarget),
+    liveOrderBookQuoteForRlusdOut(rlusdTarget),
+  ]);
+
+  const candidates = [
+    ...direct,
+    ...(ammLive
+      ? [quoteLiveRoute("xrpl-amm-live", "Ora — XRPL AMM pool (live)", 7, ammLive, quoteInputs)]
+      : []),
+    ...(bookLive
+      ? [
+          quoteLiveRoute(
+            "xrpl-orderbook-live",
+            "Ora — XRPL order book (live)",
+            8,
+            bookLive,
+            quoteInputs,
+          ),
+        ]
+      : []),
+  ];
 
   const rows = candidates.map((r) => ({
     id: newId("route"),

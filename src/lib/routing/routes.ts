@@ -4,16 +4,24 @@ import {
   applyBps,
   convert,
   subtract,
+  toDecimalString,
   zero,
   type Money,
 } from "@/lib/money/money";
+import type { LiveXrplQuote } from "./xrpl-market";
 import type { RouteKind, RouteQuote } from "./types";
 
-/**
- * Seeded route catalogue. The Ora rail is real; the card / SWIFT / partner
- * quotes are clearly-labelled DEMO QUOTATIONS (isSynthetic) — never presented as
- * live market pricing.
- */
+/** Ora's own margin — the same fee for the same service, however it sources
+ * the RLUSD it pays out. Everything that differs between routes below lives
+ * in `fxSpreadBps`, not here. */
+export const ORA_SERVICE_FEE_BPS = 100; // 1.00%
+
+/** All three candidates settle on the same XRPL ledger, so "reliability"
+ * no longer distinguishes one rail from a flakier one (that only made sense
+ * when comparing against non-XRPL rails) — it's XRPL's own historical
+ * consensus uptime, shared by every route here. */
+export const XRPL_RELIABILITY_BPS = 9950;
+
 interface RouteTemplate {
   key: string;
   kind: RouteKind;
@@ -27,56 +35,21 @@ interface RouteTemplate {
   reliabilityBps: number;
 }
 
-export const ROUTE_TEMPLATES: RouteTemplate[] = [
-  {
-    key: "ora-xrpl-rlusd",
-    kind: "xrpl_rlusd",
-    provider: "Ora XRPL + RLUSD rail",
-    displayName: "Ora — bank → RLUSD on XRPL → bank",
-    isSynthetic: false,
-    processingFeeBps: 100, // 1.00%
-    fxSpreadBps: 35, // 0.35%
-    flatFeeMinor: 0n,
-    estimatedSeconds: 6,
-    reliabilityBps: 9920,
-  },
-  {
-    key: "sg-fast-partner",
-    kind: "domestic_rail",
-    provider: "SG FAST / PayNow partner payout",
-    displayName: "Partner FAST payout (bank FX)",
-    isSynthetic: true,
-    processingFeeBps: 80, // 0.80%
-    fxSpreadBps: 190, // 1.90% bank FX — the catch
-    flatFeeMinor: 0n,
-    estimatedSeconds: 12,
-    reliabilityBps: 9850,
-  },
-  {
-    key: "global-card-demo",
-    kind: "card_network",
-    provider: "Global card network (demo quotation)",
-    displayName: "Card network (demo quotation)",
-    isSynthetic: true,
-    processingFeeBps: 390, // 3.90%
-    fxSpreadBps: 200, // 2.00%
-    flatFeeMinor: 0n,
-    estimatedSeconds: 172_800, // ~2 days to settled funds
-    reliabilityBps: 9700,
-  },
-  {
-    key: "swift-wire-demo",
-    kind: "swift_wire",
-    provider: "SWIFT correspondent wire (demo quotation)",
-    displayName: "SWIFT wire (demo quotation)",
-    isSynthetic: true,
-    processingFeeBps: 30, // 0.30%
-    fxSpreadBps: 120, // 1.20%
-    flatFeeMinor: 1_800n, // ~£18 lifting fee
-    estimatedSeconds: 172_800,
-    reliabilityBps: 9600,
-  },
-];
+/** Ora already holding RLUSD inventory and paying it out directly — no DEX
+ * hop needed, so no live venue query either. The 0.35% here is Ora's own
+ * quoted OTC-style spread for that inventory. */
+export const ORA_DIRECT_TEMPLATE: RouteTemplate = {
+  key: "ora-xrpl-rlusd",
+  kind: "xrpl_rlusd",
+  provider: "Ora XRPL + RLUSD rail",
+  displayName: "Ora — bank → RLUSD on XRPL → bank",
+  isSynthetic: false,
+  processingFeeBps: ORA_SERVICE_FEE_BPS,
+  fxSpreadBps: 35, // 0.35% — Ora's own quoted spread on its own inventory
+  flatFeeMinor: 0n,
+  estimatedSeconds: 6,
+  reliabilityBps: XRPL_RELIABILITY_BPS,
+};
 
 export interface QuoteInputs {
   gross: Money; // presentment currency
@@ -138,8 +111,46 @@ export function quoteRoute(t: RouteTemplate, inp: QuoteInputs): RouteQuote {
   };
 }
 
+/** Ora's own direct-inventory route only — the one candidate that needs no
+ * live network call, so it's always available even if XRPL itself is
+ * unreachable. */
 export function buildCandidateRoutes(inp: QuoteInputs): RouteQuote[] {
-  return ROUTE_TEMPLATES.map((t) => quoteRoute(t, inp));
+  return [quoteRoute(ORA_DIRECT_TEMPLATE, inp)];
+}
+
+/** The RLUSD amount (~USD, 1:1 peg) this payment needs after Ora's own fee —
+ * what a live AMM/order-book quote needs to be sized against. */
+export function rlusdTargetFor(inp: QuoteInputs, presentmentToUsdRate: string): string {
+  const processingFeeAmount = applyBps(inp.gross, ORA_SERVICE_FEE_BPS);
+  const convertible = subtract(inp.gross, processingFeeAmount);
+  return toDecimalString(convert(convertible, presentmentToUsdRate, "USD"));
+}
+
+/** Turn one live XRPL market read into a full route quote, by building a
+ * virtual template around it and reusing the exact same quoteRoute math as
+ * Ora's own direct rail — same fee, same settlement-currency conversion,
+ * only `fxSpreadBps` differs, and that number is entirely real (the venue's
+ * own stated fee plus whatever real slippage walking its live depth cost). */
+export function quoteLiveRoute(
+  key: "xrpl-amm-live" | "xrpl-orderbook-live",
+  displayName: string,
+  estimatedSeconds: number,
+  live: LiveXrplQuote,
+  inp: QuoteInputs,
+): RouteQuote {
+  const template: RouteTemplate = {
+    key,
+    kind: key === "xrpl-amm-live" ? "xrpl_amm" : "xrpl_orderbook",
+    provider: key === "xrpl-amm-live" ? "XRPL AMM (live pool)" : "XRPL order book (live)",
+    displayName,
+    isSynthetic: false,
+    processingFeeBps: ORA_SERVICE_FEE_BPS,
+    fxSpreadBps: Math.round(live.venueFeeBps + live.slippageBps),
+    flatFeeMinor: 0n,
+    estimatedSeconds,
+    reliabilityBps: XRPL_RELIABILITY_BPS,
+  };
+  return quoteRoute(template, inp);
 }
 
 export const noCost = (currency: string) => zero(currency);

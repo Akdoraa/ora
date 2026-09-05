@@ -67,10 +67,9 @@ export const routeStatus = pgEnum("route_status", [
   "selected",
 ]);
 export const routeKind = pgEnum("route_kind", [
-  "domestic_rail",
   "xrpl_rlusd",
-  "card_network",
-  "swift_wire",
+  "xrpl_amm",
+  "xrpl_orderbook",
 ]);
 
 export const bankAuthStatus = pgEnum("bank_auth_status", [
