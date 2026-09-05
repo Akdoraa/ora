@@ -210,21 +210,8 @@ body {
   animation: ora-step-in 220ms ease both;
 }
 
-/* Live route-comparison panel: each row settles into its real result one at
-   a time, and the winner gets a small confirming pop. */
-@keyframes ora-route-settle {
-  from {
-    opacity: 0.4;
-    transform: translateX(-3px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-.ora-route-settle {
-  animation: ora-route-settle 260ms ease both;
-}
+/* Live route-comparison panel: each strand of the web draws itself in as its
+   route gets revealed, and the winner gets a small confirming pop. */
 @keyframes ora-route-pop {
   0% {
     transform: scale(0.97);
@@ -251,6 +238,24 @@ body {
 }
 .ora-route-collapse {
   animation: ora-route-collapse 240ms ease both;
+}
+
+/* The routing "web": a strand draws itself in (real SVG path-drawing via
+   pathLength=100 + stroke-dashoffset, not a fade) when its route is
+   revealed, and its node/colour transition alongside it. */
+.ora-web-strand {
+  transition:
+    stroke-dashoffset 550ms ease,
+    stroke 300ms ease,
+    stroke-width 300ms ease;
+}
+.ora-web-node {
+  transition:
+    fill 300ms ease,
+    stroke 300ms ease,
+    r 300ms ease;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .ora-hairline {

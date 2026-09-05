@@ -453,31 +453,8 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
                       />
                       Routing your payment
                     </div>
-                    <div className="border-t" style={{ borderColor: "var(--fc-border)" }}>
-                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      {data.routes.map((r: any, i: number) => {
-                        const revealed = i < routesRevealed;
-                        return (
-                          <div
-                            key={r.id}
-                            className={cn(
-                              "flex items-center justify-between px-3.5 py-2 text-[13px] transition-colors duration-300",
-                              revealed && "ora-route-settle",
-                              revealed && r.status === "selected" && "ora-route-pop",
-                            )}
-                          >
-                            <span className="flex items-center gap-2">
-                              <RouteStatusIcon status={revealed ? r.status : "candidate"} />
-                              <span style={revealed && r.status === "selected" ? fc : fcMuted}>
-                                {r.displayName}
-                              </span>
-                            </span>
-                            <span className="text-[11px]" style={{ color: "var(--fc-muted)" }}>
-                              {revealed ? (ROUTE_STATUS_LABEL[r.status] ?? r.status) : "checking…"}
-                            </span>
-                          </div>
-                        );
-                      })}
+                    <div className="border-t px-2 pt-2" style={{ borderColor: "var(--fc-border)" }}>
+                      <RoutingWeb routes={data.routes} revealedCount={routesRevealed} />
                     </div>
                   </>
                 )}
@@ -605,13 +582,6 @@ function StatusLine({ status }: { status: string }) {
   return <span>{map[status] ?? "Working…"}</span>;
 }
 
-const ROUTE_STATUS_LABEL: Record<string, string> = {
-  candidate: "checking…",
-  qualified: "qualified",
-  selected: "selected",
-  rejected: "not used",
-};
-
 function RouteStatusIcon({ status }: { status: string }) {
   if (status === "selected") {
     return (
@@ -647,6 +617,103 @@ function RouteStatusIcon({ status }: { status: string }) {
       className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-black/15"
       style={{ borderTopColor: "var(--fc-muted)" }}
     />
+  );
+}
+
+const ROUTE_KIND_LABEL: Record<string, string> = {
+  xrpl_rlusd: "Direct",
+  xrpl_amm: "AMM pool",
+  xrpl_orderbook: "Order book",
+  xrpl_combined: "Combined",
+};
+
+/**
+ * The routes fan out from "Bank" to "Merchant" like strands of a web, each
+ * one a real candidate Ora actually checked. A strand draws itself in (real
+ * SVG path-drawing, not a fade) as its route gets revealed, coloured by its
+ * real final outcome; the winning strand gets a small dot that keeps
+ * travelling along it. Purely decorative math for spacing/curves — every
+ * name, kind, and outcome drawn is the real route data.
+ */
+function RoutingWeb({
+  routes,
+  revealedCount,
+}: {
+  routes: { id: string; kind: string; displayName: string; status: string }[];
+  revealedCount: number;
+}) {
+  const n = routes.length;
+  const srcX = 20;
+  const dstX = 300;
+  const midX = 160;
+  const baseY = 58;
+  const spacing = n <= 1 ? 0 : Math.min(26, 88 / (n - 1));
+  const ys = routes.map((_, i) => baseY + (i - (n - 1) / 2) * spacing);
+
+  return (
+    <svg viewBox="0 0 320 112" className="w-full" style={{ height: 112 }} aria-hidden>
+      <circle cx={srcX} cy={baseY} r={3.5} fill="var(--fc-text)" />
+      <circle cx={dstX} cy={baseY} r={3.5} fill="var(--fc-text)" />
+      <text x={srcX} y={baseY + 18} textAnchor="middle" fontSize="9" fill="var(--fc-muted)">
+        Bank
+      </text>
+      <text x={dstX} y={baseY + 18} textAnchor="middle" fontSize="9" fill="var(--fc-muted)">
+        Merchant
+      </text>
+
+      {routes.map((r, i) => {
+        const revealed = i < revealedCount;
+        const y = ys[i]!;
+        const d = `M${srcX},${baseY} Q${midX},${y} ${dstX},${baseY}`;
+        const isWinner = revealed && r.status === "selected";
+        const color = !revealed
+          ? "var(--fc-border)"
+          : r.status === "selected"
+            ? "#32c770"
+            : r.status === "qualified"
+              ? "var(--fc-text)"
+              : "var(--fc-muted)";
+        return (
+          <g key={r.id}>
+            <path
+              d={d}
+              fill="none"
+              stroke={color}
+              strokeWidth={isWinner ? 2.25 : 1.25}
+              strokeLinecap="round"
+              pathLength={100}
+              className="ora-web-strand"
+              style={{ strokeDasharray: 100, strokeDashoffset: revealed ? 0 : 100 }}
+            />
+            <circle
+              cx={midX}
+              cy={y}
+              r={isWinner ? 4.5 : 3.5}
+              fill={revealed ? color : "var(--fc-panel)"}
+              stroke={color}
+              strokeWidth={1.25}
+              className={cn("ora-web-node", isWinner && "ora-route-pop")}
+            />
+            {revealed && (
+              <text
+                x={midX}
+                y={y - 9}
+                textAnchor="middle"
+                fontSize="9"
+                fill={isWinner ? "var(--fc-text)" : "var(--fc-muted)"}
+              >
+                {ROUTE_KIND_LABEL[r.kind] ?? r.displayName}
+              </text>
+            )}
+            {isWinner && (
+              <circle r={2.75} fill="#32c770">
+                <animateMotion dur="1.6s" repeatCount="indefinite" path={d} />
+              </circle>
+            )}
+          </g>
+        );
+      })}
+    </svg>
   );
 }
 
