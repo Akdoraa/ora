@@ -69,20 +69,70 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* The Ora checkout ground: flat and neutral, matching the reference. */
+/* The Ora checkout ground: literal Figma "Payment Checkout Design" spec —
+   own font (Inter) and own palette, scoped to this page only. */
 .ora-checkout-bg {
+  --fc-text: #0a0d13;
+  --fc-muted: #acacac;
+  --fc-border: #d9d9d9;
+  --fc-panel: #f9fafa;
+  --fc-green: #32c770;
+  --fc-green-text: #f3f3f3;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   background: var(--color-paper);
 }
 
-/* Figma "Payment Checkout Design" label-above-input field. */
-.ora-input {
+/* Figma "Payment Checkout Design" — literal component styles, scoped to
+   .ora-checkout-bg via the --fc-* custom properties defined above. */
+.fc-input {
   width: 100%;
-  border: 1px solid var(--color-line-strong);
+  border: 1.5px solid var(--fc-muted);
   border-radius: 4px;
-  padding: 0.55rem 0.7rem;
-  font-size: 13px;
-  background: var(--color-card);
-  color: var(--color-ink);
+  padding: 11px 16px;
+  font-size: 16px;
+  background: #fff;
+  color: var(--fc-text);
+}
+.fc-input::placeholder {
+  color: var(--fc-muted);
+}
+.fc-pay-button {
+  display: block;
+  width: 100%;
+  border-radius: 4px;
+  background: var(--fc-green);
+  color: var(--fc-green-text);
+  font-weight: 700;
+  font-size: 16px;
+  padding: 20px 0;
+  text-align: center;
+  transition: opacity 120ms ease;
+}
+.fc-pay-button:hover:not(:disabled) {
+  opacity: 0.92;
+}
+.fc-pay-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.fc-secondary-button {
+  border: 1.5px solid var(--fc-muted);
+  border-radius: 4px;
+  padding: 0 20px;
+  font-size: 16px;
+  color: var(--fc-text);
+}
+.fc-dropdown-trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  border: 1.5px solid var(--fc-muted);
+  border-radius: 4px;
+  padding: 11px 16px;
+  font-size: 16px;
+  color: var(--fc-muted);
+  background: #fff;
 }
 
 /* Step-change transition for the checkout identity flow (phone -> otp ->

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
 // Apfel Grotesk is a paid commercial typeface — no licensed copy available,
@@ -10,6 +10,17 @@ const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-jakarta",
   weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
+// The checkout is a literal implementation of a specific Figma file, whose
+// own spec is set in Inter — loaded separately and scoped to that page only
+// (see .ora-checkout-bg / the checkout route), the rest of the product stays
+// on Plus Jakarta Sans.
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -33,7 +44,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${plexMono.variable}`}>
+    <html lang="en" className={`${jakarta.variable} ${inter.variable} ${plexMono.variable}`}>
       <body className="min-h-dvh antialiased">{children}</body>
     </html>
   );

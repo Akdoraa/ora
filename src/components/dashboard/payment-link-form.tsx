@@ -124,7 +124,7 @@ export function PaymentLinkForm() {
         )}
       </Card>
 
-      <style>{`.ora-input{width:100%;border:1px solid var(--color-line-strong);border-radius:10px;padding:8px 10px;font-size:14px;background:var(--color-card)}`}</style>
+      <style>{`.ora-input{width:100%;border:1px solid var(--color-line-strong);border-radius:4px;padding:8px 10px;font-size:14px;background:var(--color-card)}`}</style>
     </div>
   );
 }
