@@ -28,6 +28,61 @@ export function Stat({
   );
 }
 
+type KpiTone = "purple" | "blue" | "purple-dark" | "lime" | "basic";
+
+// Colour system pulled from the dash-template Figma file's "_Sections"
+// component (node 3881:66379): a badge + title row, a big value, and a
+// white/tinted pill indicator, cycled across 5 brand tones.
+const KPI_TONE: Record<KpiTone, { bg: string; text: string; badge: string; pill: string }> = {
+  purple: { bg: "var(--dc-purple)", text: "#fff", badge: "rgba(255,255,255,0.2)", pill: "#fff" },
+  blue: { bg: "var(--dc-blue)", text: "#fff", badge: "rgba(255,255,255,0.2)", pill: "#fff" },
+  "purple-dark": {
+    bg: "var(--dc-purple-dark)",
+    text: "#fff",
+    badge: "rgba(255,255,255,0.2)",
+    pill: "#fff",
+  },
+  lime: { bg: "var(--dc-lime)", text: "var(--dc-text)", badge: "rgba(0,0,0,0.08)", pill: "#fff" },
+  basic: { bg: "var(--dc-basic)", text: "var(--dc-text)", badge: "rgba(0,0,0,0.06)", pill: "#fff" },
+};
+
+export function KpiCard({
+  icon,
+  title,
+  value,
+  pill,
+  tone,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  value: React.ReactNode;
+  pill?: React.ReactNode;
+  tone: KpiTone;
+}) {
+  const t = KPI_TONE[tone];
+  return (
+    <div className="dc-kpi" style={{ background: t.bg, color: t.text }}>
+      <div className="flex items-center gap-2">
+        <span
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+          style={{ background: t.badge }}
+        >
+          {icon}
+        </span>
+        <span className="text-[13px] font-medium opacity-90">{title}</span>
+      </div>
+      <div className="flex items-end justify-between gap-2">
+        <span className="text-[28px] leading-none font-bold tracking-tight">{value}</span>
+        {pill && (
+          <span className="dc-pill" style={{ background: t.pill, color: "var(--dc-text)" }}>
+            {pill}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /** Monochrome bar chart (deck style): black bars, hairline gridlines. */
 export function BarChart({
   data,

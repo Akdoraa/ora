@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Inter, IBM_Plex_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter, DM_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
 // Apfel Grotesk is a paid commercial typeface — no licensed copy available,
@@ -24,6 +24,15 @@ const inter = Inter({
   display: "swap",
 });
 
+// The dashboard components file (dash-template, node 2894:41872) specs its
+// own type in DM Sans — loaded separately and scoped to /dashboard only.
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
+  weight: ["400", "500", "700"],
+  display: "swap",
+});
+
 const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   variable: "--font-plex-mono",
@@ -44,7 +53,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${inter.variable} ${plexMono.variable}`}>
+    <html
+      lang="en"
+      className={`${jakarta.variable} ${inter.variable} ${dmSans.variable} ${plexMono.variable}`}
+    >
       <body className="min-h-dvh antialiased">{children}</body>
     </html>
   );

@@ -82,6 +82,65 @@ body {
   background: var(--color-paper);
 }
 
+/* The Ora dashboard, restyled from the dash-template "❖ Components" page
+   (figma.com/design/ZDjgp4bFWMAibD8LcsqDQy, node 2894:41872), pulled via the
+   Figma MCP connector: the exact colour system (_Sections, node 3881:66379)
+   and button (_Button, node 2718:44044) — own font (DM Sans) and own
+   palette, scoped to /dashboard only. Colours: bg/basic #e7e4e3, primary-3
+   (purple) #8e62ef, primary-4 (dark purple) #723ceb, tertiary (blue)
+   #009fe0, secondary (lime) #c3ff1f, primary-alt (near-black) #2a2726,
+   text primary-static #21201f. Buttons are a fully-rounded pill, per the
+   file's own _Button component — kept literal here rather than forced onto
+   the product's general 4px-radius rule, same reasoning as the checkout's
+   own Inter font living only inside .ora-checkout-bg. */
+.ora-dash {
+  --dc-text: #21201f;
+  --dc-basic: #e7e4e3;
+  --dc-purple: #8e62ef;
+  --dc-purple-dark: #723ceb;
+  --dc-blue: #009fe0;
+  --dc-lime: #c3ff1f;
+  --dc-black: #2a2726;
+  font-family: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+}
+/* Colour + text set inline per card (5-tone rotation) — these two classes are
+   layout-only so every tone shares the same shape. */
+.dc-kpi {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+  border-radius: 16px;
+  padding: 16px;
+  min-height: 132px;
+}
+.dc-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 360px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px;
+}
+.dc-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 40px;
+  padding: 10px 16px;
+  border-radius: 360px;
+  background: var(--dc-purple-dark);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  transition: opacity 120ms ease;
+}
+.dc-button:hover {
+  opacity: 0.9;
+}
+
 /* Figma "Payment Checkout Design" — literal component styles, scoped to
    .ora-checkout-bg via the --fc-* custom properties defined above. */
 .fc-input {

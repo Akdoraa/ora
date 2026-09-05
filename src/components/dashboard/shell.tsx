@@ -23,7 +23,7 @@ export function DashboardShell({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="min-h-dvh bg-paper">
+    <div className="ora-dash min-h-dvh bg-paper">
       <header className="border-b border-line bg-card">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
           <div className="flex items-center gap-6">
@@ -36,9 +36,9 @@ export function DashboardShell({
                   key={href}
                   href={href}
                   className={cn(
-                    "rounded-[4px] px-3 py-1.5 text-[13px] transition",
+                    "rounded-[360px] px-3 py-1.5 text-[13px] transition",
                     active === href
-                      ? "bg-ink text-paper"
+                      ? "bg-[var(--dc-purple-dark)] text-white"
                       : "text-muted hover:bg-sky-50 hover:text-ink",
                   )}
                 >
@@ -60,9 +60,9 @@ export function DashboardShell({
               key={href}
               href={href}
               className={cn(
-                "shrink-0 rounded-[4px] px-3 py-1.5 text-[13px] transition",
+                "shrink-0 rounded-[360px] px-3 py-1.5 text-[13px] transition",
                 active === href
-                  ? "bg-ink text-paper"
+                  ? "bg-[var(--dc-purple-dark)] text-white"
                   : "border border-line-strong text-muted hover:bg-sky-50 hover:text-ink",
               )}
             >
@@ -74,7 +74,7 @@ export function DashboardShell({
 
       <main className="mx-auto max-w-6xl px-6 py-8">
         <div className="mb-6 flex items-end justify-between gap-4">
-          <h1 className="font-sans text-3xl font-bold tracking-tight text-ink">{title}</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-ink">{title}</h1>
           {action}
         </div>
         {children}

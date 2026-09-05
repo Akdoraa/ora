@@ -107,12 +107,7 @@ export function PaymentLinkForm() {
             <Field label="Hosted checkout" value={result.checkoutUrl} />
             <Field label="Agent manifest" value={result.manifestUrl} />
             <Hairline />
-            <a
-              href={result.checkoutUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-block rounded-[4px] bg-ink px-4 py-2 text-[13px] font-medium text-paper"
-            >
+            <a href={result.checkoutUrl} target="_blank" rel="noreferrer" className="dc-button">
               Open checkout ↗
             </a>
           </div>

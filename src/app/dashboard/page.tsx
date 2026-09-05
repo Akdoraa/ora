@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { DashboardShell } from "@/components/dashboard/shell";
 import { Card, Hairline } from "@/components/ui/primitives";
-import { Stat, BarChart } from "@/components/dashboard/stat";
+import { KpiCard, BarChart } from "@/components/dashboard/stat";
 import {
   merchantOverview,
   merchantPayments,
@@ -45,18 +45,33 @@ export default async function DashboardOverview() {
       active="/dashboard"
       title="Overview"
       action={
-        <Link
-          href="/demo?fresh=1"
-          className="rounded-[4px] bg-ink px-4 py-2 text-[13px] font-medium text-paper hover:bg-ink-soft"
-        >
+        <Link href="/demo?fresh=1" className="dc-button">
           New checkout
         </Link>
       }
     >
       <div className="grid gap-3 sm:grid-cols-3">
-        <Stat label="Volume" value={fmtMinor(ov.totalVolumeMinor, ov.volumeCurrency)} />
-        <Stat label="Success rate" value={`${ov.successRatePct}%`} />
-        <Stat label="Saved vs card" value={fmtMinor(ov.savingsMinor, "GBP")} tone="positive" />
+        <KpiCard
+          tone="purple-dark"
+          icon={<VolumeIcon />}
+          title="Volume"
+          value={fmtMinor(ov.totalVolumeMinor, ov.volumeCurrency)}
+          pill={ov.volumeCurrency}
+        />
+        <KpiCard
+          tone="blue"
+          icon={<PulseIcon />}
+          title="Success rate"
+          value={`${ov.successRatePct}%`}
+          pill="of intents"
+        />
+        <KpiCard
+          tone="lime"
+          icon={<PiggyIcon />}
+          title="Saved vs card"
+          value={fmtMinor(ov.savingsMinor, "GBP")}
+          pill="vs 4%"
+        />
       </div>
 
       <Card className="mt-3 p-5">
@@ -108,5 +123,29 @@ export default async function DashboardOverview() {
         </div>
       </Card>
     </DashboardShell>
+  );
+}
+
+// Minimal 16px line icons for the KPI card badges — no icon set dependency.
+function VolumeIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M2 12V8M6 12V4M10 12V6M14 12V2" strokeLinecap="round" />
+    </svg>
+  );
+}
+function PulseIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M1 8h3l1.5-4L9 12l1.5-4H15" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+function PiggyIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M2 9a5 5 0 0 1 9.8-1.5L14 7v3l-1.6.3A5 5 0 0 1 2 9Z" strokeLinejoin="round" />
+      <circle cx="5" cy="9" r="0.6" fill="currentColor" stroke="none" />
+    </svg>
   );
 }
