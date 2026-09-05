@@ -143,18 +143,6 @@ body {
 
 /* Figma "Payment Checkout Design" — literal component styles, scoped to
    .ora-checkout-bg via the --fc-* custom properties defined above. */
-.fc-input {
-  width: 100%;
-  border: 1.5px solid var(--fc-muted);
-  border-radius: 4px;
-  padding: 11px 16px;
-  font-size: 16px;
-  background: #fff;
-  color: var(--fc-text);
-}
-.fc-input::placeholder {
-  color: var(--fc-muted);
-}
 .fc-pay-button {
   display: block;
   width: 100%;

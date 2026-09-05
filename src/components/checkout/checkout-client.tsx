@@ -42,9 +42,8 @@ interface BankOption {
 interface SelectedBank {
   bankId: string;
   bankName: string;
-  accountMask: string;
 }
-type IdentityStep = "phone" | "otp" | "link-bank" | "ready";
+type BankStep = "pick" | "connecting" | "ready";
 
 /**
  * Literal implementation of the Figma "Payment Checkout Design" community
@@ -53,9 +52,11 @@ type IdentityStep = "phone" | "otp" | "link-bank" | "ready";
  * #acacac muted/stroke, #32c770 pay-button green, #f9fafa order-summary
  * panel, #d9d9d9 border), exact Inter type spec, exact two-column layout
  * (Payment | Order Summary), and the exact "Choose your bank" dropdown
- * pattern instead of a tile grid. Only genuine additions: the phone/OTP
- * identity step (the reference has none — Ora needs one) and the live
- * agent/settlement flow, styled to match the same input/button language.
+ * pattern instead of a tile grid. Genuine addition beyond the reference: the
+ * live agent/settlement flow below it, styled to match the same button
+ * language. No phone number, no OTP, no remembered identity across visits —
+ * every payment is just picking a bank and logging in, same as the reference
+ * itself implies (Ora never asks for card details either way).
  */
 export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
   const router = useRouter();
@@ -64,23 +65,18 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
   const [error, setError] = useState<string | null>(null);
   const redirected = useRef(false);
 
-  const [identityStep, setIdentityStep] = useState<IdentityStep>("phone");
-  const [phone, setPhone] = useState("");
-  const [challengeId, setChallengeId] = useState<string | null>(null);
-  const [otpInput, setOtpInput] = useState("");
-  // demo only — no SMS provider is wired up, so there's nothing to receive on
-  // a real phone. Rather than silently pre-filling the code (which never
-  // looked like a real OTP entry), the field starts empty and this offers it
-  // as a tap-to-fill suggestion, the same pattern iOS/Android use for a code
-  // that arrived by text — the payer still has to act on it themselves.
-  const [suggestedOtp, setSuggestedOtp] = useState<string | null>(null);
-  const [customerId, setCustomerId] = useState<string | null>(null);
+  const [bankStep, setBankStep] = useState<BankStep>("pick");
   const [banks, setBanks] = useState<BankOption[]>([]);
   const [bankListOpen, setBankListOpen] = useState(false);
   const [selectedBank, setSelectedBank] = useState<SelectedBank | null>(null);
-  const [returning, setReturning] = useState(false);
-  const [identityBusy, setIdentityBusy] = useState(false);
-  const [identityError, setIdentityError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (status !== "created") return;
+    fetch("/api/checkout/banks?country=GB")
+      .then((r) => r.json())
+      .then((b) => setBanks(b.banks ?? []))
+      .catch(() => {});
+  }, [status]);
 
   const intent = data.intent;
   const merchant = data.merchant;
@@ -134,101 +130,23 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
     if (RUNNING.has(status)) startPolling();
   }, [status, startPolling]);
 
-  async function submitPhone(e: React.FormEvent) {
-    e.preventDefault();
-    setIdentityBusy(true);
-    setIdentityError(null);
-    try {
-      const res = await fetch("/api/checkout/identify", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ phone }),
-      });
-      const body = await res.json();
-      if (!res.ok) {
-        setIdentityError(body.message ?? "couldn't send a code to that number");
-        return;
-      }
-      setChallengeId(body.challengeId);
-      // present only when no SMS provider actually sent a real text (see
-      // src/lib/identity/sms.ts) — once one does, this stays null and the
-      // payer has to type the code that actually arrived on their phone.
-      setSuggestedOtp(body.devCode ?? null);
-      setIdentityStep("otp");
-    } catch (e) {
-      setIdentityError(e instanceof Error ? e.message : "network error");
-    } finally {
-      setIdentityBusy(false);
-    }
+  // No account behind this — picking a bank just means logging into it, every
+  // time, right here. The brief "connecting" beat is a genuine UI state (not
+  // a fake progress bar hiding a real network call): there's nothing to
+  // authenticate against yet, the real bank authorization happens later,
+  // server-side, once the agent actually runs (see confirmBankAuthorization
+  // in src/lib/agent/runner.ts) — this is just picking which bank that step
+  // will use.
+  function pickBank(bank: BankOption) {
+    setBankListOpen(false);
+    setSelectedBank({ bankId: bank.id, bankName: bank.name });
+    setBankStep("connecting");
+    setTimeout(() => setBankStep("ready"), 700);
   }
 
-  async function submitOtp(e: React.FormEvent) {
-    e.preventDefault();
-    setIdentityBusy(true);
-    setIdentityError(null);
-    try {
-      const res = await fetch("/api/checkout/verify", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ challengeId, code: otpInput }),
-      });
-      const body = await res.json();
-      if (!res.ok) {
-        setIdentityError(body.message ?? "that code didn't work");
-        return;
-      }
-      setCustomerId(body.customerId);
-      if (body.savedBank) {
-        setSelectedBank(body.savedBank);
-        setReturning(true);
-        setIdentityStep("ready");
-      } else {
-        const banksRes = await fetch("/api/checkout/banks?country=GB");
-        const banksBody = await banksRes.json();
-        setBanks(banksBody.banks ?? []);
-        setIdentityStep("link-bank");
-      }
-    } catch (e) {
-      setIdentityError(e instanceof Error ? e.message : "network error");
-    } finally {
-      setIdentityBusy(false);
-    }
-  }
-
-  async function pickBank(bank: BankOption) {
-    setIdentityBusy(true);
-    setIdentityError(null);
-    try {
-      const res = await fetch("/api/checkout/link-bank", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ customerId, bankId: bank.id, country: "GB" }),
-      });
-      const body = await res.json();
-      if (!res.ok) {
-        setIdentityError(body.message ?? "couldn't connect that bank");
-        return;
-      }
-      setSelectedBank(body);
-      setBankListOpen(false);
-      setIdentityStep("ready");
-    } catch (e) {
-      setIdentityError(e instanceof Error ? e.message : "network error");
-    } finally {
-      setIdentityBusy(false);
-    }
-  }
-
-  function useDifferentNumber() {
-    setIdentityStep("phone");
-    setPhone("");
-    setChallengeId(null);
-    setOtpInput("");
-    setSuggestedOtp(null);
-    setCustomerId(null);
+  function useDifferentBank() {
+    setBankStep("pick");
     setSelectedBank(null);
-    setReturning(false);
-    setIdentityError(null);
   }
 
   async function run() {
@@ -272,7 +190,7 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
   }
 
   const running = RUNNING.has(status) || busy === "run" || busy === "approve";
-  const identified = identityStep === "ready" && !!selectedBank;
+  const identified = bankStep === "ready" && !!selectedBank;
   const fc = { color: "var(--fc-text)" };
   const fcMuted = { color: "var(--fc-muted)" };
 
@@ -309,63 +227,7 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
 
           {status === "created" && (
             <div className="mt-6" aria-live="polite">
-              {identityStep === "phone" && (
-                <form onSubmit={submitPhone} className="ora-step space-y-4">
-                  <FcField label="Phone number">
-                    <input
-                      id="checkout-phone"
-                      type="tel"
-                      required
-                      autoComplete="tel"
-                      placeholder="+44 7700 900123"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="fc-input"
-                    />
-                  </FcField>
-                  <button type="submit" disabled={identityBusy} className="fc-pay-button">
-                    {identityBusy ? "…" : "Continue"}
-                  </button>
-                </form>
-              )}
-
-              {identityStep === "otp" && (
-                <form onSubmit={submitOtp} className="ora-step space-y-4">
-                  <FcField label={`Code sent to ${phone}`}>
-                    <input
-                      id="checkout-otp"
-                      type="text"
-                      inputMode="numeric"
-                      required
-                      autoComplete="one-time-code"
-                      placeholder="123456"
-                      value={otpInput}
-                      onChange={(e) => setOtpInput(e.target.value)}
-                      className="fc-input font-mono"
-                    />
-                  </FcField>
-                  {suggestedOtp && suggestedOtp !== otpInput && (
-                    <button
-                      type="button"
-                      onClick={() => setOtpInput(suggestedOtp)}
-                      className="rounded-[4px] border px-3 py-1.5 font-mono text-[13px]"
-                      style={{ borderColor: "var(--fc-border)", color: "var(--fc-text)" }}
-                    >
-                      Use {suggestedOtp}
-                    </button>
-                  )}
-                  <div className="flex gap-2">
-                    <button type="submit" disabled={identityBusy} className="fc-pay-button flex-1">
-                      {identityBusy ? "…" : "Verify"}
-                    </button>
-                    <button type="button" onClick={useDifferentNumber} className="fc-secondary-button">
-                      Back
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {identityStep === "link-bank" && (
+              {bankStep === "pick" && (
                 <div className="ora-step flex flex-col items-start gap-4">
                   <button
                     type="button"
@@ -383,7 +245,6 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
                           key={b.id}
                           type="button"
                           onClick={() => pickBank(b)}
-                          disabled={identityBusy}
                           className="w-full py-3 pr-[110px] pl-4 text-left text-[16px] hover:underline"
                           style={fcMuted}
                         >
@@ -395,20 +256,24 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
                 </div>
               )}
 
-              {identityStep === "ready" && selectedBank && (
-                <div className="ora-step flex items-center justify-between" style={fc}>
-                  <span className="text-[16px]">
-                    {returning ? "Welcome back — " : "Connected — "}
-                    {selectedBank.bankName} {selectedBank.accountMask}
-                  </span>
-                  <button type="button" onClick={useDifferentNumber} className="text-[14px] hover:underline" style={fcMuted}>
-                    not you?
-                  </button>
+              {bankStep === "connecting" && selectedBank && (
+                <div className="ora-step flex items-center gap-2.5 text-[16px]" style={fcMuted}>
+                  <span
+                    aria-hidden
+                    className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-black/15"
+                    style={{ borderTopColor: "var(--fc-muted)" }}
+                  />
+                  Logging in to {selectedBank.bankName}…
                 </div>
               )}
 
-              {identityError && (
-                <p className="mt-2 text-[14px] text-negative">{identityError}</p>
+              {bankStep === "ready" && selectedBank && (
+                <div className="ora-step flex items-center justify-between" style={fc}>
+                  <span className="text-[16px]">Connected — {selectedBank.bankName}</span>
+                  <button type="button" onClick={useDifferentBank} className="text-[14px] hover:underline" style={fcMuted}>
+                    not you?
+                  </button>
+                </div>
               )}
             </div>
           )}
@@ -753,17 +618,6 @@ function RadioOption({ label, active, disabled }: { label: string; active?: bool
       </span>
       {label}
     </span>
-  );
-}
-
-function FcField({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-2 block text-[16px] font-medium" style={{ color: "var(--fc-text)" }}>
-        {label}
-      </span>
-      {children}
-    </label>
   );
 }
 

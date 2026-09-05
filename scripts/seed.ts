@@ -146,25 +146,8 @@ async function main() {
       id: IDS.customer,
       email: "procurement@kestrel-digital.example",
       name: "Kestrel Digital Ltd",
-      // fictional UK "drama" number range (Ofcom-reserved for exactly this —
-      // never a real subscriber), pre-linked so the checkout's phone+OTP
-      // step can demo the *returning*-customer fast path out of the box
-      phone: "+447700900123",
       country: "GB",
       holdingCurrency: "GBP",
-    })
-    .onConflictDoNothing();
-
-  await db
-    .insert(schema.customerBankLinks)
-    .values({
-      id: seedId("cbl", "kestrel-monzo"),
-      customerId: IDS.customer,
-      provider: "ora_demo_bank",
-      bankId: "gb-monzo",
-      bankName: "Monzo",
-      accountMask: "•••• 4821",
-      status: "active",
     })
     .onConflictDoNothing();
 
@@ -215,9 +198,6 @@ async function main() {
   console.log(`  product       ${IDS.product}  (£4,250.00)`);
   console.log(`  customer      ${IDS.customer}  (Kestrel Digital, GBP)`);
   console.log(`  merchant XRPL ${merchantWallet}`);
-  console.log(
-    `  returning customer demo: enter +447700900123 at checkout — Monzo •••• 4821 is already linked`,
-  );
   console.log(`\n  objective:\n  "${OBJECTIVE}"\n`);
   console.log("  Create an intent:");
   console.log(

@@ -218,43 +218,8 @@ export const customers = pgTable("customers", {
   id: id(),
   email: text("email"),
   name: text("name"),
-  // E.164, e.g. "+447700900123" — the identity a returning checkout is
-  // recognised by (phone + OTP), independent of any one merchant
-  phone: text("phone").unique(),
   country: char("country", { length: 2 }),
   holdingCurrency: currency("holding_currency"),
-  createdAt,
-});
-
-/**
- * A customer's linked bank account, remembered across checkouts so a repeat
- * purchase skips bank selection entirely — phone + OTP, then pay. Never
- * stores real credentials, same as bank_authorizations.
- */
-export const customerBankLinks = pgTable("customer_bank_links", {
-  id: id(),
-  customerId: text("customer_id")
-    .notNull()
-    .references(() => customers.id),
-  provider: text("provider").notNull().default("ora_demo_bank"),
-  bankId: text("bank_id").notNull(),
-  bankName: text("bank_name").notNull(),
-  accountMask: text("account_mask").notNull(),
-  status: text("status").notNull().default("active"), // active | revoked
-  createdAt,
-});
-
-/**
- * A one-time code sent to a phone number to identify a checkout without a
- * password or account. Demo-only: no real SMS provider is wired up, so the
- * code is returned directly in the API response (never in production).
- */
-export const otpChallenges = pgTable("otp_challenges", {
-  id: id(),
-  phone: text("phone").notNull(),
-  code: text("code").notNull(),
-  consumedAt: timestamp("consumed_at", { withTimezone: true }),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   createdAt,
 });
 
