@@ -69,6 +69,7 @@ Evidence mapped to each criterion. Paths are in this repo; hashes in
 | Expectation | Evidence |
 |---|---|
 | Polished two-step bank checkout | `/checkout/[id]` — one card, method → authorize; Figma "Payment Checkout Design" structure, Ora identity |
+| Pay-by-bank as seamless as a saved card | Phone number → one-time code → bank picker (first time only) → pay; every return visit is phone + code straight to "Authorize" — no re-linking, matching the passwordless, remembered-payment-method UX of card-on-file/Magic-style checkouts (`src/lib/identity/otp.ts`, `/api/checkout/{identify,verify,link-bank}`) |
 | Responsive | 390px → desktop grid; scroll-contained tables/diagrams |
 | Clear agent activity | `AgentDecisionPanel` — routes, reasons, decision trace, settlement details |
 | Plain-language payment states | `StatusLine` / `StatusPill` copy for every status |
