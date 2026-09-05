@@ -21,7 +21,16 @@ const serverSchema = z.object({
   // use node-postgres instead.
   DATABASE_URL: z.string().min(1).optional(),
   PGLITE_DATA_DIR: z.string().default("./.pglite"),
+  // Public-facing base URL — used to build links shown to payers/merchants
+  // (checkoutUrl, manifestUrl, webhookUrl). Point this at a tunnel/deployment
+  // domain when the app needs to be reachable off this machine.
   APP_URL: z.string().url().default("http://localhost:3000"),
+  // The server's own address, for the agent's internal self-calls (the x402
+  // quote request in particular). Deliberately separate from APP_URL: a
+  // tunnel domain can go through a slower/flakier path (or, as happened once,
+  // fail to resolve at all on this machine's DNS) for a call that never needs
+  // to leave localhost.
+  INTERNAL_APP_URL: z.string().url().default("http://localhost:3001"),
   SESSION_SECRET: z
     .string()
     .min(16)

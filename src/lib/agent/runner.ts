@@ -384,10 +384,10 @@ export async function continueAgent(intentId: string): Promise<RunAgentResult> {
     failedStep = "handleX402Payment";
     const x402Result = await rec.step(
       "handleX402Payment",
-      { resource: `${env.APP_URL}/api/x402/quote` },
+      { resource: `${env.INTERNAL_APP_URL}/api/x402/quote` },
       async () => {
         const r = await payForResource({
-          url: `${env.APP_URL}/api/x402/quote`,
+          url: `${env.INTERNAL_APP_URL}/api/x402/quote`,
           method: "POST",
           body: {
             paymentIntentId: intentId,
