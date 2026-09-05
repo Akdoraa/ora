@@ -22,7 +22,7 @@ export default async function SettlementsPage() {
     <DashboardShell active="/dashboard/settlements" title="Settlements & reconciliation">
       <Card className="mb-4 p-5">
         <div className="flex items-center gap-2">
-          <span className="text-[12px] font-medium uppercase tracking-wide text-faint">
+          <span className="text-[12px] font-medium text-faint">
             Ledger trial balance
           </span>
           <Badge tone={balanced ? "positive" : "negative"}>

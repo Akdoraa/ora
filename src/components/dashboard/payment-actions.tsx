@@ -47,7 +47,7 @@ export function PaymentActions({
 
   return (
     <Card className="p-5">
-      <div className="text-[12px] font-medium uppercase tracking-wide text-faint">Actions</div>
+      <div className="text-[12px] font-medium text-faint">Actions</div>
       <div className="mt-3 flex flex-wrap gap-2">
         <LinkButton href={checkoutUrl} target="_blank" size="sm" variant="secondary">
           Open checkout ↗

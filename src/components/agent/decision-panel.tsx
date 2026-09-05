@@ -77,7 +77,7 @@ export function AgentDecisionPanel({ data }: { data: IntentAggregate }) {
           {/* routes */}
           {routes.length > 0 && (
             <div className="px-5 py-4">
-              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-faint">
+              <div className="mb-2 text-xs font-medium text-faint">
                 Routes considered
               </div>
               <div className="space-y-2">
@@ -92,7 +92,7 @@ export function AgentDecisionPanel({ data }: { data: IntentAggregate }) {
 
           {/* decision timeline */}
           <div className="px-5 py-4">
-            <div className="mb-2 text-xs font-medium uppercase tracking-wide text-faint">
+            <div className="mb-2 text-xs font-medium text-faint">
               Decision trace
             </div>
             <ol className="space-y-2.5">
@@ -174,7 +174,7 @@ export function SettlementDetails({ data }: { data: IntentAggregate }) {
   return (
     <div className="px-5 py-4">
       <div className="mb-2 flex items-center gap-2">
-        <span className="text-xs font-medium uppercase tracking-wide text-faint">
+        <span className="text-xs font-medium text-faint">
           Settlement details
         </span>
         <Badge tone="warning" className="font-mono lowercase tracking-normal">

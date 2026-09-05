@@ -63,7 +63,6 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
   const [identityStep, setIdentityStep] = useState<IdentityStep>("phone");
   const [phone, setPhone] = useState("");
   const [challengeId, setChallengeId] = useState<string | null>(null);
-  const [devCode, setDevCode] = useState<string | null>(null);
   const [otpInput, setOtpInput] = useState("");
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [banks, setBanks] = useState<BankOption[]>([]);
@@ -105,9 +104,9 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
         return;
       }
       setChallengeId(body.challengeId);
-      // demo only — a real integration texts this, it never appears here;
-      // pre-filling it is what lets this run live without a real phone
-      setDevCode(body.devCode);
+      // demo only — a real integration texts this, it never appears in the
+      // response; pre-filling it is what lets this run live without a real
+      // phone (no on-screen disclaimer — the field is pre-filled, that's it)
       setOtpInput(body.devCode);
       setIdentityStep("otp");
     } catch (e) {
@@ -178,7 +177,6 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
     setIdentityStep("phone");
     setPhone("");
     setChallengeId(null);
-    setDevCode(null);
     setOtpInput("");
     setCustomerId(null);
     setSelectedBank(null);
@@ -295,11 +293,6 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
                       className="fc-input font-mono"
                     />
                   </FcField>
-                  {devCode && (
-                    <p className="text-[14px]" style={fcMuted}>
-                      Demo — pre-filled, no SMS sent.
-                    </p>
-                  )}
                   <div className="flex gap-2">
                     <button type="submit" disabled={identityBusy} className="fc-pay-button flex-1">
                       {identityBusy ? "…" : "Verify"}
@@ -366,10 +359,6 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
                 <button onClick={run} disabled={busy === "run"} className="fc-pay-button">
                   {busy === "run" ? "…" : `Pay ${fmtMinor(intent.amount, intent.currency)}`}
                 </button>
-                <p className="mt-4 text-[14px] leading-[22px]" style={fcMuted}>
-                  Settles on XRPL Testnet via Ora&rsquo;s sandbox bank rail. Your data is used only
-                  to process this payment.
-                </p>
               </div>
             )}
 
@@ -385,9 +374,6 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
                 <div className="text-[16px] font-semibold" style={fc}>
                   Approval needed
                 </div>
-                <p className="mt-1 text-[14px] leading-snug" style={fcMuted}>
-                  {approval.reason}
-                </p>
                 <div className="mt-3 flex gap-2">
                   <button
                     onClick={() => decide("approve")}
@@ -416,9 +402,6 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
             {FAILED.has(status) && (
               <div className="rounded-[4px] border border-negative/30 bg-negative-bg px-4 py-3 text-[14px]">
                 <div className="font-semibold text-negative">{status.replace(/_/g, " ")}</div>
-                <p className="mt-1" style={fcMuted}>
-                  {intent.failureReason ?? "The payment could not be completed."}
-                </p>
               </div>
             )}
 
@@ -491,12 +474,9 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
         {data.agentRun ? (
           <AgentDecisionPanel data={data} />
         ) : (
-          <Card className="p-5">
-            <div className="text-[15px] font-semibold text-ink">Ora agent</div>
-            <p className="mt-2 text-[15px] leading-relaxed text-muted">
-              Start the payment and Ora&rsquo;s agent parses the objective, compares qualified
-              routes, buys a signed FX quote over x402, and settles.
-            </p>
+          <Card className="flex items-center justify-between p-5">
+            <span className="text-[15px] font-semibold text-ink">Ora agent</span>
+            <span className="text-[12px] text-faint">idle</span>
           </Card>
         )}
       </div>

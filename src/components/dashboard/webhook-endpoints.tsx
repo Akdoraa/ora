@@ -55,7 +55,7 @@ export function WebhookEndpoints({ endpoints }: { endpoints: WebhookEndpointRow[
 
   return (
     <Card className="overflow-hidden">
-      <div className="px-5 py-3 text-[12px] font-medium uppercase tracking-wide text-faint">
+      <div className="px-5 py-3 text-[12px] font-medium text-faint">
         Webhook endpoints
       </div>
       <Hairline />

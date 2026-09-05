@@ -65,7 +65,7 @@ export default async function DevelopersPage() {
     >
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-5">
-          <div className="text-[12px] font-medium uppercase tracking-wide text-faint">API keys</div>
+          <div className="text-[12px] font-medium text-faint">API keys</div>
           <div className="mt-3 rounded-lg border border-line bg-paper px-3 py-2.5">
             <div className="flex items-center justify-between">
               <span className="font-mono text-[13px] text-ink">{masked}</span>
@@ -82,7 +82,7 @@ export default async function DevelopersPage() {
         </Card>
 
         <Card className="p-5">
-          <div className="text-[12px] font-medium uppercase tracking-wide text-faint">
+          <div className="text-[12px] font-medium text-faint">
             Hosted checkout & manifest
           </div>
           <Row
@@ -106,14 +106,14 @@ export default async function DevelopersPage() {
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Card className="overflow-hidden">
-          <div className="px-5 py-3 text-[12px] font-medium uppercase tracking-wide text-faint">
+          <div className="px-5 py-3 text-[12px] font-medium text-faint">
             TypeScript integration
           </div>
           <Hairline />
           <CopyBlock code={SNIPPET} lang="ts" />
         </Card>
         <Card className="overflow-hidden">
-          <div className="px-5 py-3 text-[12px] font-medium uppercase tracking-wide text-faint">
+          <div className="px-5 py-3 text-[12px] font-medium text-faint">
             Create a payment intent (curl)
           </div>
           <Hairline />
@@ -133,7 +133,7 @@ export default async function DevelopersPage() {
       </div>
 
       <Card className="mt-4 overflow-hidden">
-        <div className="px-5 py-3 text-[12px] font-medium uppercase tracking-wide text-faint">
+        <div className="px-5 py-3 text-[12px] font-medium text-faint">
           x402 service integration
         </div>
         <Hairline />
@@ -142,7 +142,7 @@ export default async function DevelopersPage() {
 
       <Card className="mt-4 overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3">
-          <span className="text-[12px] font-medium uppercase tracking-wide text-faint">
+          <span className="text-[12px] font-medium text-faint">
             Webhook log
           </span>
           <span className="font-mono text-[11px] text-faint">

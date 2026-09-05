@@ -89,7 +89,7 @@ export default async function ReceiptPage({
             <>
               <Hairline />
               <div className="px-6 py-5">
-                <div className="mb-2 text-xs font-medium uppercase tracking-wide text-faint">
+                <div className="mb-2 text-xs font-medium text-faint">
                   Delivered
                 </div>
                 <div className="text-sm font-medium text-ink">{deliverable.title}</div>

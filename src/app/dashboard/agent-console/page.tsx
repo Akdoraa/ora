@@ -30,7 +30,7 @@ export default async function AgentConsole() {
       <div className="grid gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] lg:items-start">
         <Card className="p-5">
           <div className="flex items-center justify-between">
-            <span className="text-[12px] font-medium uppercase tracking-wide text-faint">
+            <span className="text-[12px] font-medium text-faint">
               Payment policy
             </span>
             <Badge tone="neutral">Kestrel Digital</Badge>
@@ -77,7 +77,7 @@ export default async function AgentConsole() {
         </Card>
 
         <Card className="overflow-hidden">
-          <div className="px-5 py-3 text-[12px] font-medium uppercase tracking-wide text-faint">
+          <div className="px-5 py-3 text-[12px] font-medium text-faint">
             Agent runs
           </div>
           <Hairline />

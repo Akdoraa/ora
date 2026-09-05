@@ -80,7 +80,7 @@ export default async function PaymentDetail({ params }: { params: Promise<{ id: 
           />
 
           <Card className="p-5">
-            <div className="text-[12px] font-medium uppercase tracking-wide text-faint">
+            <div className="text-[12px] font-medium text-faint">
               Webhook deliveries
             </div>
             <div className="mt-2 space-y-1.5">
@@ -110,7 +110,7 @@ export default async function PaymentDetail({ params }: { params: Promise<{ id: 
           )}
 
           <Card className="overflow-hidden">
-            <div className="px-5 py-3 text-[12px] font-medium uppercase tracking-wide text-faint">
+            <div className="px-5 py-3 text-[12px] font-medium text-faint">
               Audit trail
             </div>
             <Hairline />
@@ -132,7 +132,7 @@ export default async function PaymentDetail({ params }: { params: Promise<{ id: 
           {data.xrplTransactions?.length > 0 && (
             <Card className="p-5">
               <div className="mb-2 flex items-center gap-2">
-                <span className="text-[12px] font-medium uppercase tracking-wide text-faint">
+                <span className="text-[12px] font-medium text-faint">
                   On-chain
                 </span>
                 <Badge tone="warning" className="font-mono lowercase tracking-normal">xrpl testnet</Badge>

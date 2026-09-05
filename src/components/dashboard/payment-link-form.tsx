@@ -101,7 +101,7 @@ export function PaymentLinkForm() {
       </Card>
 
       <Card className="p-5">
-        <div className="text-[12px] font-medium uppercase tracking-wide text-faint">Result</div>
+        <div className="text-[12px] font-medium text-faint">Result</div>
         {result ? (
           <div className="mt-3 space-y-3">
             <Field label="Hosted checkout" value={result.checkoutUrl} />
