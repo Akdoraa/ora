@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/primitives";
 import { AgentDecisionPanel } from "@/components/agent/decision-panel";
 import { useIntent, type IntentAggregate } from "@/hooks/use-intent";
-import { fmtMinor } from "@/lib/format";
+import { fmtMinor, humanSeconds } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 const RUNNING = new Set([
   "awaiting_route",
@@ -84,6 +85,42 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
   const intent = data.intent;
   const merchant = data.merchant;
   const approval = (data.approvals ?? []).find((a: { status: string }) => a.status === "pending");
+
+  // The payer never picks a route — they just pay. This is purely a small,
+  // passive "here's what happened underneath" animation: the routes and
+  // their outcomes are 100% real (the same ones the merchant's dashboard
+  // shows in full), just revealed one at a time instead of all at once, so
+  // watching it actually reads as "Ora is checking routes right now"
+  // instead of a table appearing mid-blink. Once every route has settled,
+  // it collapses down to a single small line.
+  const routeCount = data.routes?.length ?? 0;
+  const [routesRevealed, setRoutesRevealed] = useState(0);
+  const [routesCollapsed, setRoutesCollapsed] = useState(false);
+  const routeRevealStarted = useRef(false);
+
+  useEffect(() => {
+    if (routeCount === 0 || routeRevealStarted.current) return;
+    routeRevealStarted.current = true;
+    let cancelled = false;
+    let i = 0;
+    const revealNext = () => {
+      if (cancelled) return;
+      i += 1;
+      setRoutesRevealed(i);
+      if (i < routeCount) {
+        setTimeout(revealNext, 380);
+      } else {
+        setTimeout(() => {
+          if (!cancelled) setRoutesCollapsed(true);
+        }, 900);
+      }
+    };
+    const t = setTimeout(revealNext, 320);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [routeCount]);
 
   useEffect(() => {
     if ((status === "delivered" || status === "paid") && !redirected.current) {
@@ -390,33 +427,57 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
               </div>
             )}
 
-            {/* Live route comparison — real, polled route rows (never a
-                fee/cost figure: this is what the customer sees, the
-                merchant's own dashboard has the full cost breakdown). Shown
-                for the whole time the payment is running, including while
-                waiting on approval, since routing already finished by then. */}
-            {status !== "created" && (data.routes?.length ?? 0) > 0 && (
-              <div className="mt-3 rounded-[4px] border" style={{ borderColor: "var(--fc-border)" }}>
-                <div className="px-3.5 py-2.5 text-[13px] font-medium" style={fc}>
-                  Comparing settlement routes
-                </div>
-                <div className="border-t" style={{ borderColor: "var(--fc-border)" }}>
-                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {data.routes.map((r: any) => (
-                    <div
-                      key={r.id}
-                      className="flex items-center justify-between px-3.5 py-2 text-[13px]"
-                    >
-                      <span className="flex items-center gap-2">
-                        <RouteStatusIcon status={r.status} />
-                        <span style={r.status === "selected" ? fc : fcMuted}>{r.displayName}</span>
-                      </span>
-                      <span className="text-[11px]" style={{ color: "var(--fc-muted)" }}>
-                        {ROUTE_STATUS_LABEL[r.status] ?? r.status}
-                      </span>
+            {/* A small, passive animation of what's happening underneath —
+                never a fee/cost figure (that's the merchant dashboard's
+                job), and never anything to click: the payer isn't choosing
+                a route, just watching Ora check real ones and settle on
+                one. Every name/status here is the same real, live data the
+                merchant sees in full on their own dashboard. */}
+            {status !== "created" && routeCount > 0 && (
+              <div
+                className="ora-route-collapse mt-3 overflow-hidden rounded-[4px] border"
+                style={{ borderColor: "var(--fc-border)" }}
+              >
+                {routesCollapsed ? (
+                  <RoutingSummaryLine routes={data.routes} />
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 px-3.5 py-2.5 text-[13px] font-medium" style={fc}>
+                      <span
+                        aria-hidden
+                        className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full"
+                        style={{ background: "#32c770" }}
+                      />
+                      Routing your payment
                     </div>
-                  ))}
-                </div>
+                    <div className="border-t" style={{ borderColor: "var(--fc-border)" }}>
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {data.routes.map((r: any, i: number) => {
+                        const revealed = i < routesRevealed;
+                        return (
+                          <div
+                            key={r.id}
+                            className={cn(
+                              "flex items-center justify-between px-3.5 py-2 text-[13px] transition-colors duration-300",
+                              revealed && "ora-route-settle",
+                              revealed && r.status === "selected" && "ora-route-pop",
+                            )}
+                          >
+                            <span className="flex items-center gap-2">
+                              <RouteStatusIcon status={revealed ? r.status : "candidate"} />
+                              <span style={revealed && r.status === "selected" ? fc : fcMuted}>
+                                {r.displayName}
+                              </span>
+                            </span>
+                            <span className="text-[11px]" style={{ color: "var(--fc-muted)" }}>
+                              {revealed ? (ROUTE_STATUS_LABEL[r.status] ?? r.status) : "checking…"}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -583,6 +644,26 @@ function RouteStatusIcon({ status }: { status: string }) {
       className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-black/15"
       style={{ borderTopColor: "var(--fc-muted)" }}
     />
+  );
+}
+
+/** Once every route has settled, the panel collapses down to this one small
+ * line — still real data (the actual winning route + its real settlement
+ * time), just no longer taking up space once there's nothing left to watch. */
+function RoutingSummaryLine({ routes }: { routes: { displayName: string; estimatedSeconds: number }[] }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const winner = (routes as any[]).find((r) => r.status === "selected");
+  if (!winner) return null;
+  return (
+    <div className="ora-route-collapse flex items-center justify-between px-3.5 py-2.5 text-[13px]">
+      <span className="flex items-center gap-2">
+        <RouteStatusIcon status="selected" />
+        <span style={{ color: "var(--fc-text)" }}>Routed via {winner.displayName}</span>
+      </span>
+      <span className="text-[11px]" style={{ color: "var(--fc-muted)" }}>
+        settles in {humanSeconds(winner.estimatedSeconds)}
+      </span>
+    </div>
   );
 }
 

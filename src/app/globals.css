@@ -210,6 +210,49 @@ body {
   animation: ora-step-in 220ms ease both;
 }
 
+/* Live route-comparison panel: each row settles into its real result one at
+   a time, and the winner gets a small confirming pop. */
+@keyframes ora-route-settle {
+  from {
+    opacity: 0.4;
+    transform: translateX(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.ora-route-settle {
+  animation: ora-route-settle 260ms ease both;
+}
+@keyframes ora-route-pop {
+  0% {
+    transform: scale(0.97);
+  }
+  55% {
+    transform: scale(1.015);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.ora-route-pop {
+  animation: ora-route-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes ora-route-collapse {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.ora-route-collapse {
+  animation: ora-route-collapse 240ms ease both;
+}
+
 .ora-hairline {
   border-color: var(--color-line);
 }
