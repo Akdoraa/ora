@@ -2,6 +2,7 @@ import Link from "next/link";
 import { DashboardShell } from "@/components/dashboard/shell";
 import { Card, Hairline } from "@/components/ui/primitives";
 import { KpiCard, BarChart } from "@/components/dashboard/stat";
+import { Indicator } from "@/components/dashboard/kit";
 import {
   merchantOverview,
   merchantPayments,
@@ -75,13 +76,18 @@ export default async function DashboardOverview() {
       </div>
 
       <Card className="mt-3 p-5">
-        <div className="mb-3 text-[13px] font-medium text-ink">Volume</div>
+        <div className="mb-3 flex items-center gap-2">
+          <span className="text-[13px] font-medium text-ink">Volume</span>
+          {ov.pendingSettlementsCount > 0 && (
+            <Indicator>{ov.pendingSettlementsCount} settling</Indicator>
+          )}
+        </div>
         <BarChart
           data={series.map((s) => ({
             label: s.day.slice(5),
             value: Number(s.volumeMinor) / 100,
           }))}
-          format={(n) => fmtMinor(BigInt(Math.round(n * 100)), ov.volumeCurrency)}
+          currency={ov.volumeCurrency}
         />
       </Card>
 

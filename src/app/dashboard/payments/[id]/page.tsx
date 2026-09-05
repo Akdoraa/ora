@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/shell";
 import { Card, Hairline, Row, Badge } from "@/components/ui/primitives";
 import { StatusPill } from "@/components/dashboard/status-pill";
+import { Breadcrumb } from "@/components/dashboard/kit";
 import { AgentDecisionPanel } from "@/components/agent/decision-panel";
 import { PaymentActions } from "@/components/dashboard/payment-actions";
 import { WebhookMini } from "@/components/dashboard/webhook-mini";
@@ -30,20 +30,21 @@ export default async function PaymentDetail({ params }: { params: Promise<{ id: 
     .where(eq(schema.webhookDeliveries.paymentIntentId, id));
 
   return (
-    <DashboardShell
-      active="/dashboard/payments"
-      title={intent.reference ?? "Payment"}
-      action={
-        <Link href="/dashboard/payments" className="text-[13px] text-brand hover:underline">
-          ← All payments
-        </Link>
-      }
-    >
-      <div className="mb-4 flex flex-wrap items-center gap-2 font-mono text-[12px] text-faint">
-        <span>{intent.id}</span>
-        <StatusPill status={intent.status} />
-        <Badge tone={intent.origin === "agent" ? "sky" : "neutral"}>{intent.origin}</Badge>
-        {intent.failureReason && <span className="text-negative">{intent.failureReason}</span>}
+    <DashboardShell active="/dashboard/payments" title={intent.reference ?? "Payment"}>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <Breadcrumb
+          items={[
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Payments", href: "/dashboard/payments" },
+            { label: intent.reference ?? intent.id },
+          ]}
+        />
+        <div className="flex flex-wrap items-center gap-2 font-mono text-[12px] text-faint">
+          <span>{intent.id}</span>
+          <StatusPill status={intent.status} />
+          <Badge tone={intent.origin === "agent" ? "sky" : "neutral"}>{intent.origin}</Badge>
+          {intent.failureReason && <span className="text-negative">{intent.failureReason}</span>}
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:items-start">
