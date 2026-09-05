@@ -18,8 +18,8 @@ export async function POST(req: NextRequest) {
   if (!parsed.ok) return parsed.res;
 
   try {
-    const { challengeId, devCode, expiresAt } = await requestOtp(parsed.data.phone);
-    return NextResponse.json({ challengeId, devCode, expiresAt });
+    const { challengeId, sent, devCode, expiresAt } = await requestOtp(parsed.data.phone);
+    return NextResponse.json({ challengeId, sent, devCode, expiresAt });
   } catch (err) {
     if (err instanceof InvalidPhoneError) {
       return apiError(422, "invalid_phone", err.message);

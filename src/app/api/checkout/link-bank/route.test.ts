@@ -18,8 +18,11 @@ beforeEach(async () => {
 });
 
 async function identify() {
+  // devCode is always populated in tests — sendOtpSms short-circuits under
+  // NODE_ENV=test (see src/lib/identity/sms.ts), so a real text is never
+  // attempted and `sent` is always false here.
   const { challengeId, devCode } = await requestOtp("+447700900123");
-  return verifyOtp(challengeId, devCode);
+  return verifyOtp(challengeId, devCode!);
 }
 
 describe("POST /api/checkout/link-bank", () => {

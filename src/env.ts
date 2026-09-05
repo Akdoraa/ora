@@ -64,6 +64,18 @@ const serverSchema = z.object({
     .min(16)
     .default("dev-only-insecure-x402-quote-signing-secret"),
 
+  // --- SMS (checkout OTP) ---------------------------------------------------
+  // Unset => no real text is sent; the OTP is handed back in the API
+  // response for the checkout's own "Use <code>" tap-to-fill chip (see
+  // src/lib/identity/sms.ts). Set the Twilio trio to send a real text via
+  // Twilio; TEXTBELT_KEY is a free, no-signup fallback (defaults to the
+  // public shared "textbelt" quota — one free text per day, best-effort,
+  // never assume it's available) tried only when Twilio isn't configured.
+  TWILIO_ACCOUNT_SID: z.string().optional(),
+  TWILIO_AUTH_TOKEN: z.string().optional(),
+  TWILIO_FROM_NUMBER: z.string().optional(),
+  TEXTBELT_KEY: z.string().default("textbelt"),
+
   // --- platform ------------------------------------------------------------
   WEBHOOK_SIGNING_SECRET: z
     .string()

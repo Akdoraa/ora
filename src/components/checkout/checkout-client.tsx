@@ -150,7 +150,10 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
         return;
       }
       setChallengeId(body.challengeId);
-      setSuggestedOtp(body.devCode);
+      // present only when no SMS provider actually sent a real text (see
+      // src/lib/identity/sms.ts) — once one does, this stays null and the
+      // payer has to type the code that actually arrived on their phone.
+      setSuggestedOtp(body.devCode ?? null);
       setIdentityStep("otp");
     } catch (e) {
       setIdentityError(e instanceof Error ? e.message : "network error");

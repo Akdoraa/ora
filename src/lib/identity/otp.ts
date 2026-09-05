@@ -3,6 +3,7 @@ import { eq, and } from "drizzle-orm";
 import { getDb, schema } from "@/db/client";
 import { newId } from "@/lib/ids";
 import { demoBankProvider } from "@/lib/bank-rails/demo-provider";
+import { sendOtpSms } from "@/lib/identity/sms";
 import { logger } from "@/lib/logger";
 
 const genCode = customAlphabet("0123456789", 6);
@@ -31,14 +32,16 @@ export function normalizePhone(raw: string): string {
 
 export interface OtpChallengeResult {
   challengeId: string;
+  /** true once a real text was actually handed to a provider and accepted */
+  sent: boolean;
   /**
-   * Demo-only. No SMS provider is wired up, so the code is handed straight
-   * back in the response instead of being sent by text — a real integration
-   * (Twilio Verify or similar) would never return this. Every OTP-issuing
-   * call site must present it as an on-screen "demo code" hint, not a hidden
-   * value the UI is expected to already know.
+   * Present only when `sent` is false — no provider is configured, or every
+   * configured one failed (see src/lib/identity/sms.ts). The code is handed
+   * straight back in the response so the checkout can still demo live via
+   * an on-screen "Use <code>" chip. Never present once a real text has
+   * actually gone out — a genuine OTP flow never echoes the code back.
    */
-  devCode: string;
+  devCode?: string;
   expiresAt: string;
 }
 
@@ -67,8 +70,17 @@ export async function requestOtp(rawPhone: string): Promise<OtpChallengeResult> 
   const challengeId = newId("otp");
   await db.insert(schema.otpChallenges).values({ id: challengeId, phone, code, expiresAt });
 
-  logger.info({ phone, challengeId }, "otp: issued (demo — no SMS provider wired up)");
-  return { challengeId, devCode: code, expiresAt: expiresAt.toISOString() };
+  const sms = await sendOtpSms(phone, code);
+  if (sms.sent) {
+    logger.info({ phone, challengeId, provider: sms.provider }, "otp: sent by real SMS");
+    return { challengeId, sent: true, expiresAt: expiresAt.toISOString() };
+  }
+
+  logger.info(
+    { phone, challengeId, reason: sms.error },
+    "otp: no SMS provider available — falling back to the on-screen demo code",
+  );
+  return { challengeId, sent: false, devCode: code, expiresAt: expiresAt.toISOString() };
 }
 
 export interface VerifiedIdentity {

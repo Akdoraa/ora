@@ -16,6 +16,15 @@ beforeEach(async () => {
   await useTestDb();
 });
 
+/** requestOtp always falls back to the devCode chip in tests (sendOtpSms
+ * short-circuits under NODE_ENV=test) — this just gives that a definite
+ * string type instead of sprinkling non-null assertions everywhere below. */
+async function requestOtpDev(phone: string) {
+  const result = await requestOtp(phone);
+  if (result.sent || !result.devCode) throw new Error("expected the devCode fallback in tests");
+  return { challengeId: result.challengeId, devCode: result.devCode, expiresAt: result.expiresAt };
+}
+
 describe("normalizePhone", () => {
   it("keeps a leading + and strips everything else non-digit", () => {
     expect(normalizePhone(" +44 7700 900123 ")).toBe("+447700900123");
@@ -31,7 +40,7 @@ describe("requestOtp", () => {
   });
 
   it("creates the customer on first request and returns a demo code", async () => {
-    const result = await requestOtp("+447700900123");
+    const result = await requestOtpDev("+447700900123");
     expect(result.devCode).toMatch(/^\d{6}$/);
     expect(result.challengeId).toMatch(/^otp_/);
 
@@ -44,8 +53,8 @@ describe("requestOtp", () => {
   });
 
   it("does not create a second customer row for a repeat request from the same phone", async () => {
-    await requestOtp("+447700900123");
-    await requestOtp("+447700900123");
+    await requestOtpDev("+447700900123");
+    await requestOtpDev("+447700900123");
     const db = await getDb();
     const rows = await db
       .select()
@@ -57,26 +66,26 @@ describe("requestOtp", () => {
 
 describe("verifyOtp", () => {
   it("succeeds with the right code and reports no saved bank for a new customer", async () => {
-    const { challengeId, devCode } = await requestOtp("+447700900123");
+    const { challengeId, devCode } = await requestOtpDev("+447700900123");
     const identity = await verifyOtp(challengeId, devCode);
     expect(identity.phone).toBe("+447700900123");
     expect(identity.savedBank).toBeNull();
   });
 
   it("rejects the wrong code", async () => {
-    const { challengeId, devCode } = await requestOtp("+447700900123");
+    const { challengeId, devCode } = await requestOtpDev("+447700900123");
     const wrong = devCode === "000000" ? "111111" : "000000";
     await expect(verifyOtp(challengeId, wrong)).rejects.toThrow(OtpVerificationError);
   });
 
   it("rejects a code that was already used once", async () => {
-    const { challengeId, devCode } = await requestOtp("+447700900123");
+    const { challengeId, devCode } = await requestOtpDev("+447700900123");
     await verifyOtp(challengeId, devCode);
     await expect(verifyOtp(challengeId, devCode)).rejects.toThrow(/already been used/);
   });
 
   it("rejects an expired code", async () => {
-    const { challengeId, devCode } = await requestOtp("+447700900123");
+    const { challengeId, devCode } = await requestOtpDev("+447700900123");
     vi.useFakeTimers();
     try {
       vi.advanceTimersByTime(6 * 60_000);
@@ -87,11 +96,11 @@ describe("verifyOtp", () => {
   });
 
   it("reports the saved bank for a returning customer", async () => {
-    const first = await requestOtp("+447700900123");
+    const first = await requestOtpDev("+447700900123");
     const identity1 = await verifyOtp(first.challengeId, first.devCode);
     await linkBank(identity1.customerId, "gb-monzo", "GB");
 
-    const second = await requestOtp("+447700900123");
+    const second = await requestOtpDev("+447700900123");
     const identity2 = await verifyOtp(second.challengeId, second.devCode);
     expect(identity2.savedBank).toMatchObject({ bankId: "gb-monzo", bankName: "Monzo" });
     expect(identity2.savedBank!.accountMask).toMatch(/^•+ \d{4}$/);
@@ -100,13 +109,13 @@ describe("verifyOtp", () => {
 
 describe("linkBank", () => {
   it("rejects an unknown bank id", async () => {
-    const { challengeId, devCode } = await requestOtp("+447700900123");
+    const { challengeId, devCode } = await requestOtpDev("+447700900123");
     const identity = await verifyOtp(challengeId, devCode);
     await expect(linkBank(identity.customerId, "not-a-real-bank", "GB")).rejects.toThrow();
   });
 
   it("replaces the previous link instead of accumulating two active ones", async () => {
-    const { challengeId, devCode } = await requestOtp("+447700900123");
+    const { challengeId, devCode } = await requestOtpDev("+447700900123");
     const identity = await verifyOtp(challengeId, devCode);
     await linkBank(identity.customerId, "gb-monzo", "GB");
     await linkBank(identity.customerId, "gb-barclays", "GB");
