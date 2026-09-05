@@ -69,19 +69,6 @@ export default async function ReceiptPage({
               value={fmtMinor(intent.settlementAmount ?? intent.merchantNetAmount, intent.settlementCurrency)}
               strong
             />
-            <Row label="Ora processing fee" value={fmtMinor(intent.processingFeeAmount, intent.currency)} />
-            <Row
-              label="Estimated card fee (4%)"
-              value={<s className="text-faint">{fmtMinor(intent.estimatedCardFeeAmount, intent.currency)}</s>}
-            />
-            <Row
-              label={<span className="text-positive">Saved vs card</span>}
-              value={
-                <span className="font-semibold text-positive">
-                  {fmtMinor(intent.savingsVsCardAmount, intent.currency)}
-                </span>
-              }
-            />
             <Row label="Settlement time" value={humanSeconds(intent.settlementSeconds)} />
           </div>
 

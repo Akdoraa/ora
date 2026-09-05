@@ -64,6 +64,12 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
   const [phone, setPhone] = useState("");
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [otpInput, setOtpInput] = useState("");
+  // demo only — no SMS provider is wired up, so there's nothing to receive on
+  // a real phone. Rather than silently pre-filling the code (which never
+  // looked like a real OTP entry), the field starts empty and this offers it
+  // as a tap-to-fill suggestion, the same pattern iOS/Android use for a code
+  // that arrived by text — the payer still has to act on it themselves.
+  const [suggestedOtp, setSuggestedOtp] = useState<string | null>(null);
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [banks, setBanks] = useState<BankOption[]>([]);
   const [bankListOpen, setBankListOpen] = useState(false);
@@ -104,10 +110,7 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
         return;
       }
       setChallengeId(body.challengeId);
-      // demo only — a real integration texts this, it never appears in the
-      // response; pre-filling it is what lets this run live without a real
-      // phone (no on-screen disclaimer — the field is pre-filled, that's it)
-      setOtpInput(body.devCode);
+      setSuggestedOtp(body.devCode);
       setIdentityStep("otp");
     } catch (e) {
       setIdentityError(e instanceof Error ? e.message : "network error");
@@ -178,6 +181,7 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
     setPhone("");
     setChallengeId(null);
     setOtpInput("");
+    setSuggestedOtp(null);
     setCustomerId(null);
     setSelectedBank(null);
     setReturning(false);
@@ -224,7 +228,6 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
     }
   }
 
-  const fee = fmtMinor(intent.estimatedCardFeeAmount, intent.currency);
   const running = RUNNING.has(status) || busy === "run" || busy === "approve";
   const identified = identityStep === "ready" && !!selectedBank;
   const fc = { color: "var(--fc-text)" };
@@ -293,6 +296,16 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
                       className="fc-input font-mono"
                     />
                   </FcField>
+                  {suggestedOtp && suggestedOtp !== otpInput && (
+                    <button
+                      type="button"
+                      onClick={() => setOtpInput(suggestedOtp)}
+                      className="rounded-[4px] border px-3 py-1.5 font-mono text-[13px]"
+                      style={{ borderColor: "var(--fc-border)", color: "var(--fc-text)" }}
+                    >
+                      Use {suggestedOtp}
+                    </button>
+                  )}
                   <div className="flex gap-2">
                     <button type="submit" disabled={identityBusy} className="fc-pay-button flex-1">
                       {identityBusy ? "…" : "Verify"}
@@ -443,24 +456,13 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
               <span>Merchant receives</span>
               <span>{intent.settlementCurrency}</span>
             </div>
-            <div className="flex justify-between">
-              <span>Card (≈4%)</span>
-              <span className="line-through" style={fcMuted}>
-                {fee}
-              </span>
-            </div>
           </div>
 
           <div className="my-6 h-px" style={{ background: "var(--fc-border)" }} />
 
           <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="text-[16px] font-medium" style={fc}>
-                Total
-              </div>
-              <div className="mt-1 text-[14px]" style={fcMuted}>
-                Ora fee (1%) — merchant pays
-              </div>
+            <div className="text-[16px] font-medium" style={fc}>
+              Total
             </div>
             <div className="text-[32px] font-medium" style={fc}>
               {fmtMinor(intent.amount, intent.currency)}
@@ -469,13 +471,17 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
         </div>
       </div>
 
-      {/* ── agent activity ──────────────────────────────────────────────── */}
+      {/* ── agent activity — customer-safe: what's routing/settling the
+          payment, never processing-fee/cost figures (that's for the
+          merchant's own dashboard, not the payer). ────────────────────── */}
       <div className="mx-auto max-w-4xl px-6 pb-10 sm:px-10">
         {data.agentRun ? (
-          <AgentDecisionPanel data={data} />
+          <AgentDecisionPanel data={data} audience="customer" />
         ) : (
           <Card className="flex items-center justify-between p-5">
-            <span className="text-[15px] font-semibold text-ink">Ora agent</span>
+            <span className="text-[15px] font-semibold text-ink">
+              Ora agent — routes &amp; settles your payment
+            </span>
             <span className="text-[12px] text-faint">idle</span>
           </Card>
         )}
