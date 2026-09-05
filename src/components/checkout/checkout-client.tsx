@@ -238,7 +238,12 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
 
   return (
     <div className="ora-checkout-bg min-h-dvh">
-      <div className="mx-auto grid max-w-4xl lg:grid-cols-2">
+      {/* The reference "Bank Payment Flow" frame is 1440px wide with the two
+          panels split edge-to-edge 50/50 (Order summary's own background
+          spans the full right half, no margin) — not a narrow centered
+          card. mx-auto max-w-[1440px] reproduces that literally: full-bleed
+          on any screen up to 1440px, centered beyond it. */}
+      <div className="mx-auto grid max-w-[1440px] lg:grid-cols-2">
         {/* ── Payment ─────────────────────────────────────────────────── */}
         <div className="p-6 sm:p-10">
           <div className="mb-2 flex items-center justify-between text-[13px]" style={fcMuted}>
@@ -507,7 +512,7 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
       {/* ── agent activity — customer-safe: what's routing/settling the
           payment, never processing-fee/cost figures (that's for the
           merchant's own dashboard, not the payer). ────────────────────── */}
-      <div className="mx-auto max-w-4xl px-6 pb-10 sm:px-10">
+      <div className="mx-auto max-w-[1440px] px-6 pb-10 sm:px-10">
         {data.agentRun ? (
           <AgentDecisionPanel data={data} audience="customer" />
         ) : (

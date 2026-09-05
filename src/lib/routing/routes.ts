@@ -131,17 +131,29 @@ export function rlusdTargetFor(inp: QuoteInputs, presentmentToUsdRate: string): 
  * Ora's own direct rail — same fee, same settlement-currency conversion,
  * only `fxSpreadBps` differs, and that number is entirely real (the venue's
  * own stated fee plus whatever real slippage walking its live depth cost). */
+type LiveRouteKey = "xrpl-amm-live" | "xrpl-orderbook-live" | "xrpl-combined-live";
+
+const LIVE_ROUTE_META: Record<LiveRouteKey, { kind: RouteKind; provider: string }> = {
+  "xrpl-amm-live": { kind: "xrpl_amm", provider: "XRPL AMM (live pool)" },
+  "xrpl-orderbook-live": { kind: "xrpl_orderbook", provider: "XRPL order book (live)" },
+  "xrpl-combined-live": {
+    kind: "xrpl_combined",
+    provider: "XRPL order book + AMM (live, combined)",
+  },
+};
+
 export function quoteLiveRoute(
-  key: "xrpl-amm-live" | "xrpl-orderbook-live",
+  key: LiveRouteKey,
   displayName: string,
   estimatedSeconds: number,
   live: LiveXrplQuote,
   inp: QuoteInputs,
 ): RouteQuote {
+  const meta = LIVE_ROUTE_META[key];
   const template: RouteTemplate = {
     key,
-    kind: key === "xrpl-amm-live" ? "xrpl_amm" : "xrpl_orderbook",
-    provider: key === "xrpl-amm-live" ? "XRPL AMM (live pool)" : "XRPL order book (live)",
+    kind: meta.kind,
+    provider: meta.provider,
     displayName,
     isSynthetic: false,
     processingFeeBps: ORA_SERVICE_FEE_BPS,

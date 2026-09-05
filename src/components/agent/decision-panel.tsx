@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Badge, Card, Hairline, Row } from "@/components/ui/primitives";
 import { fmtMinor, fmtPct, humanSeconds, shortHash } from "@/lib/format";
+import { applyBps, money } from "@/lib/money/money";
 import { cn } from "@/lib/utils";
 import type { IntentAggregate } from "@/hooks/use-intent";
 
@@ -93,6 +94,7 @@ export function AgentDecisionPanel({
                     key={r.id}
                     route={r}
                     currency={data.intent.currency}
+                    grossAmount={data.intent.amount}
                     audience={audience}
                   />
                 ))}
@@ -145,15 +147,23 @@ export function AgentDecisionPanel({
 function RouteRow({
   route: r,
   currency,
+  grossAmount,
   audience,
 }: {
   route: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   currency: string;
+  grossAmount: string | number | bigint;
   audience: Audience;
 }) {
   const isCustomer = audience === "customer";
   const tone =
     r.status === "selected" ? "positive" : r.status === "qualified" ? "sky" : "negative";
+  // The persisted route row only stores totalCostAmount + processingFeeBps
+  // (not the fxCost/flatFee split) — recompute Ora's own cut from the bps
+  // rate and subtract it back out, so the display never depends on fields
+  // the row doesn't actually have.
+  const processingFeeAmount = applyBps(money(grossAmount, currency), r.processingFeeBps);
+  const routingCostMinor = BigInt(r.totalCostAmount) - processingFeeAmount.amount;
   return (
     <div
       className={cn(
@@ -176,12 +186,15 @@ function RouteRow({
         </div>
       ) : (
         <>
+          {/* Ora's own 1% margin is identical on every route (it's what
+              Ora charges, not a routing decision) — left out here on
+              purpose so this comparison shows only what actually differs
+              between routes: the real cost of getting the money there. */}
           <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5 font-mono text-[11px] text-muted">
-            <span>fee {fmtPct(r.processingFeeBps)}</span>
             <span>fx {fmtPct(r.fxSpreadBps)}</span>
             <span>{humanSeconds(r.estimatedSeconds)}</span>
             <span>{fmtPct(r.reliabilityBps, 1)} uptime</span>
-            <span>cost {fmtMinor(r.totalCostAmount, currency)}</span>
+            <span>routing cost {fmtMinor(routingCostMinor, currency)}</span>
           </div>
           {r.rejectionReasons?.length > 0 && (
             <p className="mt-1 text-[12px] text-negative">{r.rejectionReasons.join(" · ")}</p>

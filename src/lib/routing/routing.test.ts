@@ -2,7 +2,11 @@ import { describe, it, expect } from "vitest";
 import { money, toNumber } from "@/lib/money/money";
 import { buildCandidateRoutes, quoteLiveRoute, rlusdTargetFor } from "./routes";
 import { evaluateRoutes, selectRoute } from "./qualify";
-import { ammQuoteForRlusdOut, orderBookQuoteForRlusdOut } from "./xrpl-market";
+import {
+  ammQuoteForRlusdOut,
+  orderBookQuoteForRlusdOut,
+  combinedQuoteForRlusdOut,
+} from "./xrpl-market";
 import type { EffectiveConstraints } from "./types";
 
 const INPUTS = {
@@ -131,5 +135,42 @@ describe("live XRPL order book route (book_offers, real depth walk)", () => {
   it("declines to quote a trade the visible book can't fully fill", async () => {
     const quote = await orderBookQuoteForRlusdOut(fakeBookClient, "1000");
     expect(quote).toBeNull();
+  });
+});
+
+describe("combined live route (real order book first, real AMM tops up the rest)", () => {
+  const fakeCombinedClient = {
+    request: async (req: Record<string, unknown>) => {
+      if (req.command === "book_offers") {
+        return {
+          result: {
+            offers: [{ TakerGets: { value: "1" }, TakerPays: "5000000", owner_funds: "1" }], // 1 RLUSD at 5 XRP/RLUSD
+          },
+        };
+      }
+      return {
+        result: {
+          amm: {
+            amount: "698730941100",
+            amount2: { value: "246237.4538109351" },
+            trading_fee: 501,
+          },
+        },
+      };
+    },
+  };
+
+  it("fills a trade the book alone couldn't, by topping up from the AMM", async () => {
+    // the book only has 1 RLUSD funded — a 100 RLUSD trade needs the AMM too
+    const quote = await combinedQuoteForRlusdOut(fakeCombinedClient, "100");
+    expect(quote).not.toBeNull();
+    expect(quote!.venueFeeBps).toBeCloseTo(50.1, 1); // the AMM's real fee, once it's used
+  });
+
+  it("uses only the book when it's enough on its own — cheaper than pure AMM would be", async () => {
+    const quote = await combinedQuoteForRlusdOut(fakeCombinedClient, "1");
+    expect(quote).not.toBeNull();
+    expect(quote!.venueFeeBps).toBe(0); // never touched the AMM
+    expect(quote!.xrpDropsCost).toBe("5000000"); // exactly the book's own price
   });
 });

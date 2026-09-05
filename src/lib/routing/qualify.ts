@@ -86,9 +86,13 @@ export function selectRoute(evaluated: EvaluatedRoute[]): {
   )[0]!;
 
   const rejected = evaluated.filter((r) => r.status === "rejected");
+  // Ora's own margin is identical whichever route wins, so it's left out of
+  // this sentence on purpose — this is meant to explain the routing
+  // decision, not restate Ora's constant fee. "All-in cost"/"saving" below
+  // still use the true totalCostAmount (fee included) — those are what the
+  // merchant actually nets, and stay accurate either way.
   const explanation =
-    `${winner.displayName}: ${(winner.processingFeeBps / 100).toFixed(2)}% processing fee ` +
-    `+ ${(winner.fxSpreadBps / 100).toFixed(2)}% FX spread, settles in ${humanSeconds(
+    `${winner.displayName}: ${(winner.fxSpreadBps / 100).toFixed(2)}% FX spread, settles in ${humanSeconds(
       winner.estimatedSeconds,
     )}, ` +
     `delivering ${formatMoney(winner.quotedSettlementAmount)} to the merchant. ` +

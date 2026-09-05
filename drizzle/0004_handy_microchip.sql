@@ -1,0 +1,1 @@
+ALTER TYPE "public"."route_kind" ADD VALUE 'xrpl_combined';

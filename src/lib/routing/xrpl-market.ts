@@ -145,3 +145,97 @@ export async function liveOrderBookQuoteForRlusdOut(
     return null;
   }
 }
+
+/**
+ * Combined execution: take whatever the real order book can genuinely fill
+ * first (it's discrete, funded liquidity — always at least as good as the
+ * AMM for the portion it covers), then source anything left over from the
+ * live AMM. This isn't a third independent venue — it's what XRPL's own
+ * payment engine actually does for a real cross-currency Payment (it always
+ * sources from whichever combination of the order book and an AMM gives the
+ * best real execution) — so it will often fill trades the order book alone
+ * can't, and cost less than the AMM alone for however much of the trade the
+ * book could genuinely cover.
+ */
+export async function combinedQuoteForRlusdOut(
+  client: XrplRequestClient,
+  rlusdOut: string,
+): Promise<LiveXrplQuote | null> {
+  const [bookRes, ammRes] = await Promise.all([
+    client.request({
+      command: "book_offers",
+      taker_gets: RLUSD_SPEC,
+      taker_pays: { currency: "XRP" },
+      limit: 40,
+    }),
+    client.request({ command: "amm_info", asset: { currency: "XRP" }, asset2: RLUSD_SPEC }),
+  ]);
+  const offers = bookRes.result?.offers as
+    | Array<{ TakerGets: { value: string }; TakerPays: string; owner_funds?: string }>
+    | undefined;
+  const amm = ammRes.result?.amm;
+
+  let remaining = new Decimal(rlusdOut);
+  let xrpDropsSpent = new Decimal(0);
+  let bestBookRate: Decimal | null = null;
+
+  for (const o of offers ?? []) {
+    if (remaining.lte(0)) break;
+    const listed = new Decimal(o.TakerGets.value);
+    const funded = o.owner_funds !== undefined ? new Decimal(o.owner_funds) : listed;
+    const fillable = Decimal.min(listed, funded);
+    if (fillable.lte(0)) continue;
+    const xrpPerRlusd = new Decimal(o.TakerPays).div(1_000_000).div(listed);
+    if (!bestBookRate) bestBookRate = new Decimal(1).div(xrpPerRlusd);
+    const take = Decimal.min(remaining, fillable);
+    xrpDropsSpent = xrpDropsSpent.plus(take.times(xrpPerRlusd).times(1_000_000));
+    remaining = remaining.minus(take);
+  }
+
+  let venueFeeBps = 0;
+  if (remaining.gt(0) && amm?.amount && amm?.amount2) {
+    const xReserve = new Decimal(amm.amount as string);
+    const yReserve = new Decimal((amm.amount2 as { value: string }).value);
+    const feeBps = Number(amm.trading_fee ?? 0) / 10;
+    const f = new Decimal(1).minus(new Decimal(feeBps).div(10_000));
+    if (remaining.lt(yReserve) && f.gt(0)) {
+      xrpDropsSpent = xrpDropsSpent.plus(
+        remaining.times(xReserve).div(f.times(yReserve.minus(remaining))),
+      );
+      venueFeeBps = feeBps;
+      remaining = new Decimal(0);
+    }
+  }
+
+  if (remaining.gt(0)) return null; // neither source, even combined, can fill this
+
+  const ammSpotRate =
+    amm?.amount && amm?.amount2
+      ? new Decimal((amm.amount2 as { value: string }).value).div(amm.amount as string)
+      : null;
+  const referenceRate =
+    bestBookRate && ammSpotRate
+      ? Decimal.max(bestBookRate, ammSpotRate)
+      : (bestBookRate ?? ammSpotRate);
+  if (!referenceRate) return null;
+
+  const idealDrops = new Decimal(rlusdOut).div(referenceRate).times(1_000_000);
+  const totalBps = xrpDropsSpent.minus(idealDrops).div(idealDrops).times(10_000);
+
+  return {
+    xrpDropsCost: xrpDropsSpent.toFixed(0),
+    venueFeeBps,
+    slippageBps: Math.max(0, totalBps.minus(venueFeeBps).toNumber()),
+  };
+}
+
+export async function liveCombinedQuoteForRlusdOut(
+  rlusdOut: string,
+): Promise<LiveXrplQuote | null> {
+  try {
+    return await withXrpl((client) => combinedQuoteForRlusdOut(client, rlusdOut));
+  } catch (err) {
+    logger.warn({ err }, "xrpl combined quote unavailable — no live combined route this run");
+    return null;
+  }
+}

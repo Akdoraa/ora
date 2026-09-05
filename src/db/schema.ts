@@ -70,6 +70,7 @@ export const routeKind = pgEnum("route_kind", [
   "xrpl_rlusd",
   "xrpl_amm",
   "xrpl_orderbook",
+  "xrpl_combined",
 ]);
 
 export const bankAuthStatus = pgEnum("bank_auth_status", [

@@ -1,6 +1,6 @@
 import type { Money } from "@/lib/money/money";
 
-export type RouteKind = "xrpl_rlusd" | "xrpl_amm" | "xrpl_orderbook";
+export type RouteKind = "xrpl_rlusd" | "xrpl_amm" | "xrpl_orderbook" | "xrpl_combined";
 
 export interface RouteQuote {
   key: string;
