@@ -28,7 +28,9 @@ export type IdPrefix =
   | "whd"
   | "evt"
   | "aud"
-  | "idem";
+  | "idem"
+  | "cbl"
+  | "otp";
 
 /** Stripe-style prefixed id, e.g. `pi_3x8k2m...`. */
 export function newId(prefix: IdPrefix): string {

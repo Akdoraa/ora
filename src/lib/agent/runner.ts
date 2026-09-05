@@ -38,6 +38,8 @@ export interface RunAgentInput {
   policyId: string;
   /** demo hook for the failure-path scenarios */
   bankSimulation?: Bank;
+  /** the bank the customer picked or already had on file (phone+OTP identity step) */
+  bankId?: string;
 }
 
 export type RunAgentResult =
@@ -248,6 +250,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
           amountMinor: intent.amount,
           currency: intent.currency,
           method: intent.method === "qr" ? "qr" : "bank",
+          bankId: input.bankId,
         });
         const confirmed = await demoBankProvider.confirmAuthorization(
           auth.id,

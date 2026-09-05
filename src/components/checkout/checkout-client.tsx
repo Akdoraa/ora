@@ -32,12 +32,37 @@ const DEMO_OBJECTIVE =
   "Keep processing cost at or below 1%, use a qualified route, settle in under 60 seconds, " +
   "and ask for my approval if the final amount exceeds £4,000.";
 
+interface BankOption {
+  id: string;
+  name: string;
+  logoInitials: string;
+}
+interface SelectedBank {
+  bankId: string;
+  bankName: string;
+  accountMask: string;
+}
+type IdentityStep = "phone" | "otp" | "link-bank" | "ready";
+
 export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
   const router = useRouter();
   const { data, status, refresh, startPolling } = useIntent(initial.id ?? initial.intent.id, initial);
   const [busy, setBusy] = useState<null | "run" | "approve" | "decline">(null);
   const [error, setError] = useState<string | null>(null);
   const redirected = useRef(false);
+
+  // ── phone + OTP identity, Magic-style: link a bank once, remembered next time ──
+  const [identityStep, setIdentityStep] = useState<IdentityStep>("phone");
+  const [phone, setPhone] = useState("");
+  const [challengeId, setChallengeId] = useState<string | null>(null);
+  const [devCode, setDevCode] = useState<string | null>(null);
+  const [otpInput, setOtpInput] = useState("");
+  const [customerId, setCustomerId] = useState<string | null>(null);
+  const [banks, setBanks] = useState<BankOption[]>([]);
+  const [selectedBank, setSelectedBank] = useState<SelectedBank | null>(null);
+  const [returning, setReturning] = useState(false);
+  const [identityBusy, setIdentityBusy] = useState(false);
+  const [identityError, setIdentityError] = useState<string | null>(null);
 
   const intent = data.intent;
   const merchant = data.merchant;
@@ -56,6 +81,102 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
     if (RUNNING.has(status)) startPolling();
   }, [status, startPolling]);
 
+  async function submitPhone(e: React.FormEvent) {
+    e.preventDefault();
+    setIdentityBusy(true);
+    setIdentityError(null);
+    try {
+      const res = await fetch("/api/checkout/identify", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ phone }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        setIdentityError(body.message ?? "couldn't send a code to that number");
+        return;
+      }
+      setChallengeId(body.challengeId);
+      // demo only — a real integration texts this, it never appears here;
+      // pre-filling it is what lets this run live without a real phone
+      setDevCode(body.devCode);
+      setOtpInput(body.devCode);
+      setIdentityStep("otp");
+    } catch (e) {
+      setIdentityError(e instanceof Error ? e.message : "network error");
+    } finally {
+      setIdentityBusy(false);
+    }
+  }
+
+  async function submitOtp(e: React.FormEvent) {
+    e.preventDefault();
+    setIdentityBusy(true);
+    setIdentityError(null);
+    try {
+      const res = await fetch("/api/checkout/verify", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ challengeId, code: otpInput }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        setIdentityError(body.message ?? "that code didn't work");
+        return;
+      }
+      setCustomerId(body.customerId);
+      if (body.savedBank) {
+        setSelectedBank(body.savedBank);
+        setReturning(true);
+        setIdentityStep("ready");
+      } else {
+        const banksRes = await fetch("/api/checkout/banks?country=GB");
+        const banksBody = await banksRes.json();
+        setBanks(banksBody.banks ?? []);
+        setIdentityStep("link-bank");
+      }
+    } catch (e) {
+      setIdentityError(e instanceof Error ? e.message : "network error");
+    } finally {
+      setIdentityBusy(false);
+    }
+  }
+
+  async function pickBank(bank: BankOption) {
+    setIdentityBusy(true);
+    setIdentityError(null);
+    try {
+      const res = await fetch("/api/checkout/link-bank", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ customerId, bankId: bank.id, country: "GB" }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        setIdentityError(body.message ?? "couldn't connect that bank");
+        return;
+      }
+      setSelectedBank(body);
+      setIdentityStep("ready");
+    } catch (e) {
+      setIdentityError(e instanceof Error ? e.message : "network error");
+    } finally {
+      setIdentityBusy(false);
+    }
+  }
+
+  function useDifferentNumber() {
+    setIdentityStep("phone");
+    setPhone("");
+    setChallengeId(null);
+    setDevCode(null);
+    setOtpInput("");
+    setCustomerId(null);
+    setSelectedBank(null);
+    setReturning(false);
+    setIdentityError(null);
+  }
+
   async function run() {
     setBusy("run");
     setError(null);
@@ -64,7 +185,7 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
       const res = await fetch(`/api/payment-intents/${intent.id}/run`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ objective: DEMO_OBJECTIVE }),
+        body: JSON.stringify({ objective: DEMO_OBJECTIVE, bankId: selectedBank?.bankId }),
       });
       const body = await res.json();
       if (body.status === "failed") setError(body.error ?? "the agent run failed");
@@ -98,6 +219,7 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
 
   const fee = fmtMinor(intent.estimatedCardFeeAmount, intent.currency);
   const running = RUNNING.has(status) || busy === "run" || busy === "approve";
+  const identified = identityStep === "ready" && !!selectedBank;
 
   return (
     <div className="ora-checkout-bg min-h-dvh px-4 py-8 sm:px-6 sm:py-14">
@@ -147,6 +269,126 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
             </div>
           </div>
 
+          {/* ── phone + OTP identity gate, only before the run starts ── */}
+          {status === "created" && (
+            <div className="mt-4" aria-live="polite">
+              {identityStep === "phone" && (
+                <form onSubmit={submitPhone} className="space-y-2">
+                  <label htmlFor="checkout-phone" className="block text-[12px] font-medium text-muted">
+                    Phone number
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      id="checkout-phone"
+                      type="tel"
+                      required
+                      autoComplete="tel"
+                      placeholder="+44 7700 900123"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="min-w-0 flex-1 rounded-lg border border-line-strong bg-card px-2.5 py-2 text-[13px] text-ink"
+                    />
+                    <Button type="submit" size="md" loading={identityBusy}>
+                      Continue
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-faint">
+                    We&rsquo;ll text a one-time code — no account or password needed.
+                  </p>
+                </form>
+              )}
+
+              {identityStep === "otp" && (
+                <form onSubmit={submitOtp} className="space-y-2">
+                  <label htmlFor="checkout-otp" className="block text-[12px] font-medium text-muted">
+                    Enter the code sent to {phone}
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      id="checkout-otp"
+                      type="text"
+                      inputMode="numeric"
+                      required
+                      autoComplete="one-time-code"
+                      placeholder="123456"
+                      value={otpInput}
+                      onChange={(e) => setOtpInput(e.target.value)}
+                      className="min-w-0 flex-1 rounded-lg border border-line-strong bg-card px-2.5 py-2 font-mono text-[13px] text-ink"
+                    />
+                    <Button type="submit" size="md" loading={identityBusy}>
+                      Verify
+                    </Button>
+                  </div>
+                  {devCode && (
+                    <p className="font-mono text-[11px] text-faint">
+                      Demo mode — code pre-filled ({devCode}), no real SMS sent.
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={useDifferentNumber}
+                    className="text-[11px] text-brand hover:underline"
+                  >
+                    Use a different number
+                  </button>
+                </form>
+              )}
+
+              {identityStep === "link-bank" && (
+                <div className="space-y-2">
+                  <div className="text-[12px] font-medium text-muted">Connect your bank</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {banks.map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => pickBank(b)}
+                        disabled={identityBusy}
+                        className="flex items-center gap-2 rounded-lg border border-line-strong bg-card px-2.5 py-2 text-left text-[13px] text-ink hover:bg-sky-50 disabled:opacity-50"
+                      >
+                        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-ink text-[10px] font-semibold text-paper">
+                          {b.logoInitials}
+                        </span>
+                        {b.name}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-faint">
+                    You&rsquo;ll authenticate in your bank&rsquo;s own app — Ora never sees your
+                    login. Linked once, remembered for next time.
+                  </p>
+                </div>
+              )}
+
+              {identityStep === "ready" && selectedBank && (
+                <div className="flex items-center justify-between rounded-xl border border-line-strong bg-card px-3.5 py-2.5">
+                  <div className="text-[13px] text-ink">
+                    {returning ? (
+                      <>
+                        <span className="font-medium">Welcome back</span> — pay from{" "}
+                        {selectedBank.bankName} {selectedBank.accountMask}
+                      </>
+                    ) : (
+                      <>
+                        Connected <span className="font-medium">{selectedBank.bankName}</span>{" "}
+                        {selectedBank.accountMask}
+                      </>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={useDifferentNumber}
+                    className="shrink-0 text-[11px] text-faint hover:text-ink hover:underline"
+                  >
+                    not you?
+                  </button>
+                </div>
+              )}
+
+              {identityError && <p className="mt-2 text-[12px] text-negative">{identityError}</p>}
+            </div>
+          )}
+
           <p className="mt-3 text-[12px] leading-snug text-muted">
             Ora selects the fastest qualified route within your payment policy and settles
             globally. You approve the amount before any money moves.
@@ -155,8 +397,8 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
           {/* primary action / state */}
           <div className="mt-5" aria-live="polite" aria-atomic="true">
             {status === "created" && (
-              <Button full size="lg" onClick={run} loading={busy === "run"}>
-                Authorize with Ora agent
+              <Button full size="lg" onClick={run} loading={busy === "run"} disabled={!identified}>
+                {identified ? "Authorize with Ora agent" : "Verify your phone to continue"}
               </Button>
             )}
 

@@ -13,6 +13,8 @@ const RunSchema = z.object({
   objective: z.string().min(4).max(1_000),
   policyId: z.string().min(1).optional(),
   bankSimulation: z.enum(["confirm", "fail", "expire"]).optional(),
+  /** the bank the phone+OTP identity step picked or already had on file */
+  bankId: z.string().min(1).optional(),
 });
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -46,6 +48,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     objective: parsed.data.objective,
     policyId,
     bankSimulation: parsed.data.bankSimulation,
+    bankId: parsed.data.bankId,
   });
 
   const status = result.status === "failed" ? 422 : 200;
