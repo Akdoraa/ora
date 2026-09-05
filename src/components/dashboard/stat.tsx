@@ -14,10 +14,10 @@ export function Stat({
 }) {
   return (
     <Card className="p-4">
-      <div className="text-[12px] font-medium uppercase tracking-wide text-faint">{label}</div>
+      <div className="text-[12px] font-medium text-faint">{label}</div>
       <div
         className={cn(
-          "mt-1.5 font-sans text-2xl font-semibold tracking-tight",
+          "mt-1.5 font-sans text-3xl font-bold tracking-tight",
           tone === "positive" ? "text-positive" : "text-ink",
         )}
       >

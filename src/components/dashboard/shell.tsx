@@ -36,7 +36,7 @@ export function DashboardShell({
                   key={href}
                   href={href}
                   className={cn(
-                    "rounded-full px-3 py-1.5 text-[13px] transition",
+                    "rounded-[4px] px-3 py-1.5 text-[13px] transition",
                     active === href
                       ? "bg-ink text-paper"
                       : "text-muted hover:bg-sky-50 hover:text-ink",
@@ -60,7 +60,7 @@ export function DashboardShell({
               key={href}
               href={href}
               className={cn(
-                "shrink-0 rounded-full px-3 py-1.5 text-[13px] transition",
+                "shrink-0 rounded-[4px] px-3 py-1.5 text-[13px] transition",
                 active === href
                   ? "bg-ink text-paper"
                   : "border border-line-strong text-muted hover:bg-sky-50 hover:text-ink",
@@ -74,7 +74,7 @@ export function DashboardShell({
 
       <main className="mx-auto max-w-6xl px-6 py-8">
         <div className="mb-6 flex items-end justify-between gap-4">
-          <h1 className="font-sans text-2xl font-semibold tracking-tight text-ink">{title}</h1>
+          <h1 className="font-sans text-3xl font-bold tracking-tight text-ink">{title}</h1>
           {action}
         </div>
         {children}

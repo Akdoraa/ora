@@ -22,7 +22,7 @@ export default function GlobalError({
         <h1 className="font-sans text-2xl font-semibold tracking-tight text-ink">
           Something went wrong
         </h1>
-        <p className="mt-2 font-serif text-[15px] text-muted">
+        <p className="mt-2 font-sans text-[15px] text-muted">
           This didn&rsquo;t affect any payment in flight — nothing here moves money on its own. Try
           again, or head back to the dashboard.
         </p>

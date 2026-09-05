@@ -26,7 +26,7 @@ export function buttonClasses(opts: {
 }) {
   const { variant = "primary", size = "md", full, className } = opts;
   return cn(
-    "inline-flex items-center justify-center gap-2 rounded-full font-medium transition",
+    "inline-flex items-center justify-center gap-2 rounded-[4px] font-medium transition",
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500",
     "disabled:cursor-not-allowed",
     VARIANT[variant],

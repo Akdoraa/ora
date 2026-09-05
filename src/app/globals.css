@@ -12,10 +12,11 @@
   /* darkened from an earlier #9a9a9f — that failed WCAG AA (~2.7:1) against
      --color-paper for the small meta text it's used on; this clears ~3.8:1 */
   --color-faint: #82828a;
-  --color-paper: #fbfaf7;
+  /* neutral cool grey — no warm/cream cast */
+  --color-paper: #f6f6f7;
   --color-card: #ffffff;
-  --color-line: #e9e6df;
-  --color-line-strong: #d9d5cb;
+  --color-line: #e7e7ea;
+  --color-line-strong: #d6d6db;
 
   --color-sky-50: #f2f7fd;
   --color-sky-100: #e3edfa;
@@ -24,8 +25,6 @@
   --color-sky-400: #7fa8dc;
   --color-sky-500: #4f7fc4;
   --color-sky-600: #35619f;
-
-  --color-cream: #f5efe1;
 
   --color-brand: #2563eb;
   --color-brand-ink: #1d4ed8;
@@ -40,17 +39,14 @@
   --color-warning: #b25e09;
   --color-warning-bg: #fbf0e2;
 
-  /* one deep, dramatic gradient moment — the hero and the card-face, nowhere else */
-  --color-navy-950: #05070d;
-  --color-navy-800: #0d1b33;
-  --color-navy-600: #1a3b66;
-
+  /* one font everywhere — no serif anywhere in the product */
   --font-sans:
-    var(--font-hanken), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-serif: var(--font-newsreader), ui-serif, Georgia, "Times New Roman", serif;
+    var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-serif: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
 
-  --radius-card: 16px;
+  --radius-card: 12px;
+  --radius-button: 4px;
 
   --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(16, 24, 40, 0.12);
   --shadow-pop: 0 4px 12px rgba(16, 24, 40, 0.08), 0 24px 48px -16px rgba(16, 24, 40, 0.22);
@@ -73,66 +69,20 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* The Ora checkout ground: a soft vertical sky→cream wash. */
+/* The Ora checkout ground: flat and neutral, matching the reference. */
 .ora-checkout-bg {
-  background:
-    linear-gradient(180deg, #bfd6f4 0%, #dde9f6 42%, #f2ecdd 100%);
+  background: var(--color-paper);
 }
 
-/* The one dramatic gradient moment — landing hero, nowhere else. Diagonal,
-   icy sky fading into deep navy, with two soft angled light rays. */
-.ora-hero-gradient {
-  background:
-    linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.16) 46%, transparent 54%),
-    linear-gradient(148deg, transparent 30%, rgba(255, 255, 255, 0.1) 37%, transparent 44%),
-    linear-gradient(160deg, var(--color-sky-200) 0%, var(--color-navy-600) 55%, var(--color-navy-950) 100%);
-}
-
-/* A held banknote/card face — dark, with the mark watermarked into it.
-   Used once per screen: the checkout method card, the receipt settlement card. */
-.ora-card-face {
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(155deg, var(--color-navy-800) 0%, var(--color-navy-950) 100%);
-  color: #fff;
-}
-.ora-card-face .ora-card-watermark {
-  position: absolute;
-  right: -0.35em;
-  bottom: -0.35em;
-  width: 3.4em;
-  height: 3.4em;
-  opacity: 0.14;
-  pointer-events: none;
-}
-
-/* A rounded-square action tile — the bank picker, quick-action style controls. */
-.ora-tile {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  border-radius: 14px;
+/* Figma "Payment Checkout Design" label-above-input field. */
+.ora-input {
+  width: 100%;
   border: 1px solid var(--color-line-strong);
+  border-radius: 4px;
+  padding: 0.55rem 0.7rem;
+  font-size: 13px;
   background: var(--color-card);
-  padding: 0.7rem 0.75rem;
-  text-align: left;
-  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
-}
-.ora-tile:hover:not(:disabled) {
-  border-color: var(--color-sky-400);
-  box-shadow: var(--shadow-card);
-}
-.ora-tile:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-/* Shared tactile press feedback for buttons/tiles, reduced-motion-safe (the
-   global rule below collapses the transition duration to ~0). */
-.ora-pressable {
-  transition: transform 120ms ease;
-}
-.ora-pressable:active {
-  transform: scale(0.98);
+  color: var(--color-ink);
 }
 
 /* Step-change transition for the checkout identity flow (phone -> otp ->

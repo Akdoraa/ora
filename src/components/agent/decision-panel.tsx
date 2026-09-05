@@ -55,7 +55,7 @@ export function AgentDecisionPanel({ data }: { data: IntentAggregate }) {
         <div className="border-t border-line">
           {/* objective + parsed constraints */}
           <div className="px-5 py-4">
-            <p className="font-serif text-[15px] leading-relaxed text-ink-soft">
+            <p className="font-sans text-[15px] leading-relaxed text-ink-soft">
               “{run.objectiveText}”
             </p>
             {run.parsedConstraints && (

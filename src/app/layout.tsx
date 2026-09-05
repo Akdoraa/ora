@@ -1,17 +1,15 @@
 import type { Metadata } from "next";
-import { Hanken_Grotesk, Newsreader, IBM_Plex_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const hanken = Hanken_Grotesk({
+// Apfel Grotesk is a paid commercial typeface — no licensed copy available,
+// not pirating it. Plus Jakarta Sans is the closest free, geometric-grotesque
+// match and covers every weight the design needs, display + body + one font
+// everywhere (no serif).
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-hanken",
-  display: "swap",
-});
-
-const newsreader = Newsreader({
-  subsets: ["latin"],
-  variable: "--font-newsreader",
-  style: ["normal", "italic"],
+  variable: "--font-jakarta",
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
@@ -35,10 +33,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      className={`${hanken.variable} ${newsreader.variable} ${plexMono.variable}`}
-    >
+    <html lang="en" className={`${jakarta.variable} ${plexMono.variable}`}>
       <body className="min-h-dvh antialiased">{children}</body>
     </html>
   );

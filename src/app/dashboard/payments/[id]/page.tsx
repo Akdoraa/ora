@@ -50,7 +50,7 @@ export default async function PaymentDetail({ params }: { params: Promise<{ id: 
         <div className="space-y-4">
           <Card className="p-5">
             <div className="text-sm font-medium text-ink">{data.merchant?.displayName}</div>
-            <p className="mt-1 font-serif text-[15px] text-ink-soft">{intent.description}</p>
+            <p className="mt-1 font-sans text-[15px] text-ink-soft">{intent.description}</p>
             <Hairline className="my-4" />
             <Row label="Amount" value={fmtMinor(intent.amount, intent.currency)} strong />
             <Row

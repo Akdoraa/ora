@@ -46,7 +46,7 @@ export default async function SettlementsPage() {
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <div className="min-w-[640px]">
-            <div className="grid grid-cols-[minmax(0,1fr)_120px_120px_110px_130px] gap-2 px-5 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">
+            <div className="grid grid-cols-[minmax(0,1fr)_120px_120px_110px_130px] gap-2 px-5 py-2.5 text-[12px] font-medium text-muted">
               <span>Payment</span>
               <span className="text-right">Gross</span>
               <span className="text-right">Net paid</span>

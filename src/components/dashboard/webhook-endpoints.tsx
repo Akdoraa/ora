@@ -75,7 +75,7 @@ export function WebhookEndpoints({ endpoints }: { endpoints: WebhookEndpointRow[
               <button
                 onClick={() => toggle(e.id, e.active)}
                 aria-label={`${e.active ? "Pause" : "Resume"} webhook endpoint ${e.url}`}
-                className="rounded-full border border-line-strong px-2.5 py-1 text-[11px] text-ink-soft hover:bg-sky-50"
+                className="rounded-[4px] border border-line-strong px-2.5 py-1 text-[11px] text-ink-soft hover:bg-sky-50"
               >
                 {e.active ? "Pause" : "Resume"}
               </button>

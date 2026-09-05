@@ -97,7 +97,7 @@ export default async function AgentConsole() {
                   {r.status.replace(/_/g, " ")}
                 </Badge>
               </div>
-              <p className="mt-1 line-clamp-2 font-serif text-[14px] text-ink-soft">
+              <p className="mt-1 line-clamp-2 font-sans text-[14px] text-ink-soft">
                 {r.decisionSummary ?? r.objectiveText}
               </p>
               <div className="mt-1 font-mono text-[10px] text-faint">

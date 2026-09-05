@@ -19,7 +19,7 @@ export default async function PaymentsPage() {
             the page itself never scrolls horizontally. */}
         <div className="overflow-x-auto">
           <div className="min-w-[720px]">
-            <div className="grid grid-cols-[minmax(0,1fr)_90px_110px_120px_110px_130px] gap-2 px-5 py-2.5 text-[11px] font-medium uppercase tracking-wide text-faint">
+            <div className="grid grid-cols-[minmax(0,1fr)_90px_110px_120px_110px_130px] gap-2 px-5 py-2.5 text-[12px] font-medium text-muted">
               <span>Payment</span>
               <span>Origin</span>
               <span className="text-right">Amount</span>

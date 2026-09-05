@@ -84,7 +84,7 @@ export function PaymentLinkForm() {
                   key={m}
                   onClick={() => setMethod(m)}
                   aria-pressed={method === m}
-                  className={`rounded-full border px-3 py-1.5 text-[13px] ${
+                  className={`rounded-[4px] border px-3 py-1.5 text-[13px] ${
                     method === m ? "border-ink bg-ink text-paper" : "border-line-strong text-ink"
                   }`}
                 >
@@ -111,13 +111,13 @@ export function PaymentLinkForm() {
               href={result.checkoutUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-block rounded-full bg-ink px-4 py-2 text-[13px] font-medium text-paper"
+              className="inline-block rounded-[4px] bg-ink px-4 py-2 text-[13px] font-medium text-paper"
             >
               Open checkout ↗
             </a>
           </div>
         ) : (
-          <p className="mt-3 font-serif text-[15px] text-muted">
+          <p className="mt-3 font-sans text-[15px] text-muted">
             Fill the form to generate a hosted checkout link and a machine-readable manifest URL for
             agents.
           </p>

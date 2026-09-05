@@ -11,7 +11,7 @@ export default function NotFound() {
         <h1 className="font-sans text-2xl font-semibold tracking-tight text-ink">
           Page not found
         </h1>
-        <p className="mt-2 font-serif text-[15px] text-muted">
+        <p className="mt-2 font-sans text-[15px] text-muted">
           The page — or payment — you&rsquo;re looking for doesn&rsquo;t exist, or the link has expired.
         </p>
         <div className="mt-6 flex justify-center gap-3">
