@@ -74,31 +74,13 @@ export function AgentDecisionPanel({
 
       {open && (
         <div className="border-t border-line">
-          {/* objective + parsed constraints — the merchant's own policy
-              text/thresholds, not something the payer needs to see */}
-          {!isCustomer && (
-            <>
-              <div className="px-5 py-4">
-                <p className="font-sans text-[15px] leading-relaxed text-ink-soft">
-                  “{run.objectiveText}”
-                </p>
-                {run.parsedConstraints && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {Object.entries(run.parsedConstraints).map(([k, v]) => (
-                      <span
-                        key={k}
-                        className="rounded bg-[#f3f1ec] px-1.5 py-0.5 font-mono text-[11px] text-ink-soft"
-                      >
-                        {k}={String(v)}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <Hairline />
-            </>
-          )}
-
+          {/* No objective quote / parsed-constraints chips here on purpose —
+              the standing AgentPolicy (fixed, structured, shown on Agent
+              console) already fully determines routing and approval; the
+              natural-language instruction could only ever tighten it
+              further, so quoting it back read as the actual fee policy and
+              wasn't. The route comparison below is the real, deterministic
+              part. */}
           {/* routes */}
           {visibleRoutes.length > 0 && (
             <div className="px-5 py-4">

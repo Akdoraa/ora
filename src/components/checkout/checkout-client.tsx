@@ -25,10 +25,13 @@ const FAILED = new Set([
   "cancelled",
 ]);
 
-const DEMO_OBJECTIVE =
-  "Pay invoice INV-4471 from Marina Analytics today. They must receive SGD. " +
-  "Keep processing cost at or below 1%, use a qualified route, settle in under 60 seconds, " +
-  "and ask for my approval if the final amount exceeds £4,000.";
+// No fee/threshold figures here on purpose — those already live on the
+// payer's standing AgentPolicy (maxProcessingFeeBps, autoApproveUnderAmount,
+// etc., see scripts/seed.ts) and can only ever be *tightened* by this text,
+// never loosened (src/lib/policies/policy.ts effectiveConstraints/
+// requiresApproval) — so restating them here was always redundant, and
+// looked like the payer's own fee ceiling instead of the payer's policy.
+const DEMO_OBJECTIVE = "Pay invoice INV-4471 from Marina Analytics today, using the standing payment policy.";
 
 interface BankOption {
   id: string;
@@ -382,6 +385,36 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
               </div>
             )}
 
+            {/* Live route comparison — real, polled route rows (never a
+                fee/cost figure: this is what the customer sees, the
+                merchant's own dashboard has the full cost breakdown). Shown
+                for the whole time the payment is running, including while
+                waiting on approval, since routing already finished by then. */}
+            {status !== "created" && (data.routes?.length ?? 0) > 0 && (
+              <div className="mt-3 rounded-[4px] border" style={{ borderColor: "var(--fc-border)" }}>
+                <div className="px-3.5 py-2.5 text-[13px] font-medium" style={fc}>
+                  Comparing settlement routes
+                </div>
+                <div className="border-t" style={{ borderColor: "var(--fc-border)" }}>
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {data.routes.map((r: any) => (
+                    <div
+                      key={r.id}
+                      className="flex items-center justify-between px-3.5 py-2 text-[13px]"
+                    >
+                      <span className="flex items-center gap-2">
+                        <RouteStatusIcon status={r.status} />
+                        <span style={r.status === "selected" ? fc : fcMuted}>{r.displayName}</span>
+                      </span>
+                      <span className="text-[11px]" style={{ color: "var(--fc-muted)" }}>
+                        {ROUTE_STATUS_LABEL[r.status] ?? r.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {status === "awaiting_agent_approval" && approval && (
               <div className="rounded-[4px] border border-warning/40 bg-warning-bg px-4 py-3.5">
                 <div className="text-[16px] font-semibold" style={fc}>
@@ -501,6 +534,51 @@ function StatusLine({ status }: { status: string }) {
     paid: "Settled. Delivering your purchase…",
   };
   return <span>{map[status] ?? "Working…"}</span>;
+}
+
+const ROUTE_STATUS_LABEL: Record<string, string> = {
+  candidate: "checking…",
+  qualified: "qualified",
+  selected: "selected",
+  rejected: "not used",
+};
+
+function RouteStatusIcon({ status }: { status: string }) {
+  if (status === "selected") {
+    return (
+      <span aria-hidden className="grid h-4 w-4 shrink-0 place-items-center rounded-full" style={{ background: "#32c770" }}>
+        <svg viewBox="0 0 16 16" className="h-2.5 w-2.5" fill="none" stroke="white" strokeWidth="2">
+          <path d="M3.5 8.5 6.5 11.5 12.5 4.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
+    );
+  }
+  if (status === "rejected") {
+    return (
+      <span
+        aria-hidden
+        className="h-4 w-4 shrink-0 rounded-full border"
+        style={{ borderColor: "var(--fc-muted)" }}
+      />
+    );
+  }
+  if (status === "qualified") {
+    return (
+      <span
+        aria-hidden
+        className="h-4 w-4 shrink-0 rounded-full border-2"
+        style={{ borderColor: "var(--fc-muted)" }}
+      />
+    );
+  }
+  // candidate — still being checked
+  return (
+    <span
+      aria-hidden
+      className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-black/15"
+      style={{ borderTopColor: "var(--fc-muted)" }}
+    />
+  );
 }
 
 function RadioOption({ label, active, disabled }: { label: string; active?: boolean; disabled?: boolean }) {
