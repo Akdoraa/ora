@@ -219,7 +219,7 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
           it never disturbs the reference's own top-123px offset. */}
       <div className="mx-auto flex max-w-[1440px] items-center justify-between px-6 py-4 text-[13px] sm:px-10" style={fcMuted}>
         <span>{merchant?.displayName}</span>
-        <span>ora</span>
+        <OraLogo />
       </div>
 
       {/* The reference "Bank Payment Flow" frame is 1440px wide with the two
@@ -665,6 +665,17 @@ function ChevronIcon({ up }: { up?: boolean }) {
     >
       <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+function OraLogo() {
+  return (
+    <span className="flex items-center gap-1 font-bold" style={{ color: "var(--fc-text)" }}>
+      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden>
+        <path d="M13.2 1 3.6 13.4h6L9.4 23 20.4 9.6h-6.2L13.2 1Z" />
+      </svg>
+      ora
+    </span>
   );
 }
 
