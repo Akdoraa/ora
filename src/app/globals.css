@@ -40,6 +40,11 @@
   --color-warning: #b25e09;
   --color-warning-bg: #fbf0e2;
 
+  /* one deep, dramatic gradient moment — the hero and the card-face, nowhere else */
+  --color-navy-950: #05070d;
+  --color-navy-800: #0d1b33;
+  --color-navy-600: #1a3b66;
+
   --font-sans:
     var(--font-hanken), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-serif: var(--font-newsreader), ui-serif, Georgia, "Times New Roman", serif;
@@ -72,6 +77,78 @@ body {
 .ora-checkout-bg {
   background:
     linear-gradient(180deg, #bfd6f4 0%, #dde9f6 42%, #f2ecdd 100%);
+}
+
+/* The one dramatic gradient moment — landing hero, nowhere else. Diagonal,
+   icy sky fading into deep navy, with two soft angled light rays. */
+.ora-hero-gradient {
+  background:
+    linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.16) 46%, transparent 54%),
+    linear-gradient(148deg, transparent 30%, rgba(255, 255, 255, 0.1) 37%, transparent 44%),
+    linear-gradient(160deg, var(--color-sky-200) 0%, var(--color-navy-600) 55%, var(--color-navy-950) 100%);
+}
+
+/* A held banknote/card face — dark, with the mark watermarked into it.
+   Used once per screen: the checkout method card, the receipt settlement card. */
+.ora-card-face {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(155deg, var(--color-navy-800) 0%, var(--color-navy-950) 100%);
+  color: #fff;
+}
+.ora-card-face .ora-card-watermark {
+  position: absolute;
+  right: -0.35em;
+  bottom: -0.35em;
+  width: 3.4em;
+  height: 3.4em;
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+/* A rounded-square action tile — the bank picker, quick-action style controls. */
+.ora-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-radius: 14px;
+  border: 1px solid var(--color-line-strong);
+  background: var(--color-card);
+  padding: 0.7rem 0.75rem;
+  text-align: left;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+.ora-tile:hover:not(:disabled) {
+  border-color: var(--color-sky-400);
+  box-shadow: var(--shadow-card);
+}
+.ora-tile:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Shared tactile press feedback for buttons/tiles, reduced-motion-safe (the
+   global rule below collapses the transition duration to ~0). */
+.ora-pressable {
+  transition: transform 120ms ease;
+}
+.ora-pressable:active {
+  transform: scale(0.98);
+}
+
+/* Step-change transition for the checkout identity flow (phone -> otp ->
+   link-bank -> ready). Re-keyed per step via a `key` prop so it replays. */
+@keyframes ora-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.ora-step {
+  animation: ora-step-in 220ms ease both;
 }
 
 .ora-hairline {

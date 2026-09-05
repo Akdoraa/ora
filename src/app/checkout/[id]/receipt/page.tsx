@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { getIntentAggregate } from "@/lib/payment-intents/service";
 import { jsonSafe } from "@/lib/api/serialize";
 import { Card, Hairline, Row, Badge } from "@/components/ui/primitives";
-import { OraWordmark } from "@/components/brand/wordmark";
+import { OraMark, OraWordmark } from "@/components/brand/wordmark";
 import { ReceiptClient } from "@/components/checkout/receipt-client";
 import { fmtMinor, humanSeconds, shortHash, fmtDateTime } from "@/lib/format";
 
@@ -41,16 +41,17 @@ export default async function ReceiptPage({
         </div>
 
         <Card className="overflow-hidden">
-          <div className="px-6 pt-6">
-            <div className="flex items-center gap-2">
+          <div className="ora-card-face px-6 pt-6 pb-5">
+            <OraMark className="ora-card-watermark" />
+            <div className="relative flex items-center gap-2">
               <span className="grid h-6 w-6 place-items-center rounded-full bg-positive text-white">
                 ✓
               </span>
-              <h1 className="font-sans text-xl font-semibold text-ink">
+              <h1 className="font-sans text-xl font-semibold text-white">
                 {settled ? "Payment complete" : `Payment ${intent.status.replace(/_/g, " ")}`}
               </h1>
             </div>
-            <p className="mt-1.5 font-serif text-[15px] leading-relaxed text-ink-soft">
+            <p className="relative mt-1.5 font-serif text-[15px] leading-relaxed text-white/70">
               {data.agentRun?.decisionSummary ??
                 `Paid ${merchant?.displayName} by bank.`}
             </p>

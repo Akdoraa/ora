@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { OraWordmark } from "@/components/brand/wordmark";
-import { LinkButton } from "@/components/ui/button";
 
 const PROOF = [
   "1% processing fee",
@@ -15,53 +14,57 @@ const PROOF = [
 export default function HomePage() {
   return (
     <div className="min-h-dvh bg-paper">
-      <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
-        <OraWordmark className="text-lg text-ink" />
-        <nav className="flex items-center gap-5 text-sm text-muted">
-          <Link href="/dashboard" className="hover:text-ink">
-            Dashboard
-          </Link>
-          <Link href="/dashboard/developers" className="hover:text-ink">
-            Developers
-          </Link>
-          <Link
-            href="/demo"
-            className="rounded-full bg-ink px-4 py-1.5 text-[13px] font-medium text-paper hover:bg-ink-soft"
-          >
-            Live checkout
-          </Link>
-        </nav>
-      </header>
+      {/* hero — the one dramatic gradient moment */}
+      <div className="ora-hero-gradient relative overflow-hidden">
+        <header className="relative mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
+          <OraWordmark className="text-lg text-white" />
+          <nav className="flex items-center gap-5 text-sm text-white/70">
+            <Link href="/dashboard" className="hover:text-white">
+              Dashboard
+            </Link>
+            <Link href="/dashboard/developers" className="hover:text-white">
+              Developers
+            </Link>
+            <Link
+              href="/demo"
+              className="ora-pressable rounded-full bg-white px-4 py-1.5 text-[13px] font-medium text-ink hover:bg-white/90"
+            >
+              Live checkout
+            </Link>
+          </nav>
+        </header>
 
-      {/* hero */}
-      <section className="mx-auto max-w-5xl px-6 pt-16 pb-14 sm:pt-24">
-        <h1 className="max-w-3xl font-sans text-[44px] font-semibold leading-[1.05] tracking-tight text-ink sm:text-6xl">
-          Pay by bank.
-          <br />
-          Processing fees, solved.
-        </h1>
-        <p className="mt-6 max-w-xl font-serif text-lg leading-relaxed text-ink-soft">
-          The checkout for people and AI agents. Accept instant bank payments, settle
-          globally, and keep more of every sale for a 1% processing fee.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <LinkButton href="/demo" size="lg">
-            Try the live checkout
-          </LinkButton>
-          <LinkButton href="/dashboard" size="lg" variant="secondary">
-            View merchant dashboard
-          </LinkButton>
-        </div>
+        <section className="relative mx-auto max-w-5xl px-6 pt-14 pb-20 sm:pt-20 sm:pb-28">
+          <h1 className="max-w-3xl font-sans text-[44px] font-semibold uppercase leading-[1.03] tracking-tight text-white sm:text-6xl">
+            Processing fees.
+            <br />
+            Solved.
+          </h1>
+          <p className="mt-5 max-w-md font-serif text-lg leading-relaxed text-white/75">
+            Pay by bank, for people and agents. 1% instead of 4%.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-5">
+            <Link
+              href="/demo"
+              className="ora-pressable rounded-full bg-white px-6 py-3 text-[14px] font-medium text-ink hover:bg-white/90"
+            >
+              Try the live checkout
+            </Link>
+            <Link href="/dashboard" className="text-[14px] font-medium text-white/80 hover:text-white">
+              View merchant dashboard →
+            </Link>
+          </div>
 
-        <ul className="mt-12 flex flex-wrap gap-x-6 gap-y-2 border-t border-line pt-6 font-mono text-[12px] text-muted">
-          {PROOF.map((p) => (
-            <li key={p} className="flex items-center gap-1.5">
-              <span className="h-1 w-1 rounded-full bg-lime-deep" />
-              {p}
-            </li>
-          ))}
-        </ul>
-      </section>
+          <ul className="mt-16 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/15 pt-6 font-mono text-[12px] text-white/60">
+            {PROOF.map((p) => (
+              <li key={p} className="flex items-center gap-1.5">
+                <span className="h-1 w-1 rounded-full bg-lime" />
+                {p}
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
 
       {/* two-step */}
       <section className="border-t border-line bg-card">

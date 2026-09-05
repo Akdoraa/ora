@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge, Card, Hairline, Row } from "@/components/ui/primitives";
-import { OraWordmark } from "@/components/brand/wordmark";
+import { OraMark, OraWordmark } from "@/components/brand/wordmark";
 import { AgentDecisionPanel } from "@/components/agent/decision-panel";
 import { useIntent, type IntentAggregate } from "@/hooks/use-intent";
 import { fmtMinor } from "@/lib/format";
@@ -254,17 +254,16 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
 
           <Hairline className="my-4" />
 
-          {/* method — Figma "Pay With" reduced to Ora's single clean option */}
-          <div className="rounded-xl border border-sky-300 bg-sky-50 px-3.5 py-3">
-            <div className="flex items-center gap-2.5">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-ink text-paper">
+          {/* method — a held card face, not a flat info strip */}
+          <div className="ora-card-face rounded-xl px-3.5 py-3.5">
+            <OraMark className="ora-card-watermark" />
+            <div className="relative flex items-center gap-2.5">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/15 text-white">
                 <BankGlyph />
               </span>
               <div>
-                <div className="text-sm font-medium text-ink">Pay by bank</div>
-                <div className="text-[12px] text-muted">
-                  No card number. No card expiry. No CVC.
-                </div>
+                <div className="text-sm font-medium text-white">Pay by bank</div>
+                <div className="text-[12px] text-white/65">No card. No CVC. No expiry.</div>
               </div>
             </div>
           </div>
@@ -273,7 +272,7 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
           {status === "created" && (
             <div className="mt-4" aria-live="polite">
               {identityStep === "phone" && (
-                <form onSubmit={submitPhone} className="space-y-2">
+                <form onSubmit={submitPhone} className="ora-step space-y-2">
                   <label htmlFor="checkout-phone" className="block text-[12px] font-medium text-muted">
                     Phone number
                   </label>
@@ -288,20 +287,18 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
                       onChange={(e) => setPhone(e.target.value)}
                       className="min-w-0 flex-1 rounded-lg border border-line-strong bg-card px-2.5 py-2 text-[13px] text-ink"
                     />
-                    <Button type="submit" size="md" loading={identityBusy}>
+                    <Button type="submit" size="md" loading={identityBusy} className="ora-pressable">
                       Continue
                     </Button>
                   </div>
-                  <p className="text-[11px] text-faint">
-                    We&rsquo;ll text a one-time code — no account or password needed.
-                  </p>
+                  <p className="text-[11px] text-faint">No password. Just a code.</p>
                 </form>
               )}
 
               {identityStep === "otp" && (
-                <form onSubmit={submitOtp} className="space-y-2">
+                <form onSubmit={submitOtp} className="ora-step space-y-2">
                   <label htmlFor="checkout-otp" className="block text-[12px] font-medium text-muted">
-                    Enter the code sent to {phone}
+                    Code sent to {phone}
                   </label>
                   <div className="flex gap-2">
                     <input
@@ -315,14 +312,12 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
                       onChange={(e) => setOtpInput(e.target.value)}
                       className="min-w-0 flex-1 rounded-lg border border-line-strong bg-card px-2.5 py-2 font-mono text-[13px] text-ink"
                     />
-                    <Button type="submit" size="md" loading={identityBusy}>
+                    <Button type="submit" size="md" loading={identityBusy} className="ora-pressable">
                       Verify
                     </Button>
                   </div>
                   {devCode && (
-                    <p className="font-mono text-[11px] text-faint">
-                      Demo mode — code pre-filled ({devCode}), no real SMS sent.
-                    </p>
+                    <p className="font-mono text-[11px] text-faint">Demo — pre-filled, no SMS sent.</p>
                   )}
                   <button
                     type="button"
@@ -335,7 +330,7 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
               )}
 
               {identityStep === "link-bank" && (
-                <div className="space-y-2">
+                <div className="ora-step space-y-2">
                   <div className="text-[12px] font-medium text-muted">Connect your bank</div>
                   <div className="grid grid-cols-2 gap-2">
                     {banks.map((b) => (
@@ -344,24 +339,21 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
                         type="button"
                         onClick={() => pickBank(b)}
                         disabled={identityBusy}
-                        className="flex items-center gap-2 rounded-lg border border-line-strong bg-card px-2.5 py-2 text-left text-[13px] text-ink hover:bg-sky-50 disabled:opacity-50"
+                        className="ora-tile disabled:opacity-50"
                       >
-                        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-ink text-[10px] font-semibold text-paper">
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-ink text-[10px] font-semibold text-paper">
                           {b.logoInitials}
                         </span>
-                        {b.name}
+                        <span className="text-[13px] text-ink">{b.name}</span>
                       </button>
                     ))}
                   </div>
-                  <p className="text-[11px] text-faint">
-                    You&rsquo;ll authenticate in your bank&rsquo;s own app — Ora never sees your
-                    login. Linked once, remembered for next time.
-                  </p>
+                  <p className="text-[11px] text-faint">Remembered for next time.</p>
                 </div>
               )}
 
               {identityStep === "ready" && selectedBank && (
-                <div className="flex items-center justify-between rounded-xl border border-line-strong bg-card px-3.5 py-2.5">
+                <div className="ora-step flex items-center justify-between rounded-xl border border-line-strong bg-card px-3.5 py-2.5">
                   <div className="text-[13px] text-ink">
                     {returning ? (
                       <>
@@ -390,14 +382,20 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
           )}
 
           <p className="mt-3 text-[12px] leading-snug text-muted">
-            Ora selects the fastest qualified route within your payment policy and settles
-            globally. You approve the amount before any money moves.
+            Cheapest qualified route, settled globally. You approve first.
           </p>
 
           {/* primary action / state */}
           <div className="mt-5" aria-live="polite" aria-atomic="true">
             {status === "created" && (
-              <Button full size="lg" onClick={run} loading={busy === "run"} disabled={!identified}>
+              <Button
+                full
+                size="lg"
+                onClick={run}
+                loading={busy === "run"}
+                disabled={!identified}
+                className="ora-pressable"
+              >
                 {identified ? "Authorize with Ora agent" : "Verify your phone to continue"}
               </Button>
             )}
@@ -414,7 +412,12 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
                 <div className="text-sm font-semibold text-ink">Approval needed</div>
                 <p className="mt-1 text-[13px] leading-snug text-ink-soft">{approval.reason}</p>
                 <div className="mt-3 flex gap-2">
-                  <Button size="sm" onClick={() => decide("approve")} loading={busy === "approve"}>
+                  <Button
+                    size="sm"
+                    onClick={() => decide("approve")}
+                    loading={busy === "approve"}
+                    className="ora-pressable"
+                  >
                     Approve {fmtMinor(intent.amount, intent.currency)}
                   </Button>
                   <Button
@@ -422,6 +425,7 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
                     variant="secondary"
                     onClick={() => decide("reject")}
                     loading={busy === "decline"}
+                    className="ora-pressable"
                   >
                     Decline
                   </Button>
