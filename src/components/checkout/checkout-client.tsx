@@ -2,8 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card } from "@/components/ui/primitives";
-import { AgentDecisionPanel } from "@/components/agent/decision-panel";
 import { useIntent, type IntentAggregate } from "@/hooks/use-intent";
 import { fmtMinor, humanSeconds } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -46,17 +44,23 @@ interface SelectedBank {
 type BankStep = "pick" | "connecting" | "ready";
 
 /**
- * Literal implementation of the Figma "Payment Checkout Design" community
- * file's Bank Payment Flow (figma.com/design/Q2lTr8Ebc5ZsUvPjTeFNoH, node
- * 129:485), pulled via the Figma MCP connector — exact colors (#0a0d13 text,
- * #acacac muted/stroke, #32c770 pay-button green, #f9fafa order-summary
- * panel, #d9d9d9 border), exact Inter type spec, exact two-column layout
- * (Payment | Order Summary), and the exact "Choose your bank" dropdown
- * pattern instead of a tile grid. Genuine addition beyond the reference: the
- * live agent/settlement flow below it, styled to match the same button
- * language. No phone number, no OTP, no remembered identity across visits —
- * every payment is just picking a bank and logging in, same as the reference
- * itself implies (Ora never asks for card details either way).
+ * Pixel-exact port of the Figma "Payment Checkout Design" community file's
+ * Bank Payment Flow (figma.com/design/Q2lTr8Ebc5ZsUvPjTeFNoH, node 129:485),
+ * values pulled live via get_design_context (not eyeballed): the 130px/18px
+ * asymmetric column insets, the 75px+48px combined top offset, the 36px
+ * inter-section gaps, and — the one everyone notices — the 221px reserved
+ * gap between the bank picker and the pay button. Two deliberate, disclosed
+ * departures from the literal reference: (1) the "Including $X in taxes"
+ * caption under Total is omitted — Ora's standing rule is that fee/cost
+ * figures never appear on the payer's side (see DEMO_OBJECTIVE comment
+ * above), and a tax caption is the same category of thing; (2) the
+ * Subtotal/Shipping pair is replaced with two real Ora facts (settlement
+ * currency + network) since Ora has neither a subtotal/shipping split nor
+ * a discount-code system — the discount row itself is kept for visual
+ * fidelity but rendered disabled rather than faked as functional. Genuine
+ * addition beyond the reference: the live routing panel underneath the
+ * whole card, and a slim merchant-identity strip above it — neither of
+ * which touches the reference's own internal spacing.
  */
 export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
   const router = useRouter();
@@ -189,247 +193,275 @@ export function CheckoutClient({ initial }: { initial: IntentAggregate }) {
     }
   }
 
-  const running = RUNNING.has(status) || busy === "run" || busy === "approve";
   const identified = bankStep === "ready" && !!selectedBank;
   const fc = { color: "var(--fc-text)" };
   const fcMuted = { color: "var(--fc-muted)" };
 
+  // Exactly one of these is ever true, so the action slot always renders one
+  // element of the same shape — the pay button never appears/disappears
+  // based on whether a bank is picked yet, which is what keeps the 221px
+  // gap above it visually constant across every state, not just at rest.
+  const phase: "pay" | "approve" | "running" | "receipt" | "failed" =
+    status === "awaiting_agent_approval" && approval
+      ? "approve"
+      : status === "delivered" || status === "paid"
+        ? "receipt"
+        : FAILED.has(status)
+          ? "failed"
+          : RUNNING.has(status) || busy === "run"
+            ? "running"
+            : "pay";
+
   return (
     <div className="ora-checkout-bg min-h-dvh">
+      {/* Slim identity strip — a genuine necessary addition (someone has to
+          say which merchant you're paying), kept outside the grid below so
+          it never disturbs the reference's own top-123px offset. */}
+      <div className="mx-auto flex max-w-[1440px] items-center justify-between px-6 py-4 text-[13px] sm:px-10" style={fcMuted}>
+        <span>{merchant?.displayName}</span>
+        <span>ora</span>
+      </div>
+
       {/* The reference "Bank Payment Flow" frame is 1440px wide with the two
           panels split edge-to-edge 50/50 (Order summary's own background
           spans the full right half, no margin) — not a narrow centered
           card. mx-auto max-w-[1440px] reproduces that literally: full-bleed
           on any screen up to 1440px, centered beyond it. */}
       <div className="mx-auto grid max-w-[1440px] lg:grid-cols-2">
-        {/* ── Payment ─────────────────────────────────────────────────── */}
-        <div className="p-6 sm:p-10">
-          <div className="mb-2 flex items-center justify-between text-[13px]" style={fcMuted}>
-            <span>{merchant?.displayName}</span>
-            <span>ora</span>
+        {/* ── Payment — literal node 129:525 ──────────────────────────── */}
+        <div className="flex flex-col gap-9 p-6 sm:p-10 lg:pb-[48px] lg:pl-[178px] lg:pr-[48px] lg:pt-[123px]">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-[24px] font-semibold leading-[28px] tracking-[-0.48px]" style={fc}>
+              Payment
+            </h1>
+            <div className="h-px w-full lg:w-[476px]" style={{ background: "var(--fc-border)" }} />
           </div>
 
-          <h1 className="text-[22px] font-semibold tracking-tight" style={fc}>
-            Payment
-          </h1>
-          <div className="my-3 h-px" style={{ background: "var(--fc-border)" }} />
-
-          <div className="mt-7">
-            <div className="text-[16px] font-semibold" style={fc}>
+          <div className="flex flex-col gap-4">
+            <div className="text-[18px] font-semibold" style={fc}>
               Pay With:
             </div>
-            <div className="mt-3 flex gap-5">
+            <div className="flex gap-[19px]">
               <RadioOption label="Card" disabled />
               <RadioOption label="Bank" active />
               <RadioOption label="Transfer" disabled />
             </div>
           </div>
 
-          {status === "created" && (
-            <div className="mt-6" aria-live="polite">
-              {bankStep === "pick" && (
-                <div className="ora-step flex flex-col items-start gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setBankListOpen((v) => !v)}
-                    className="fc-dropdown-trigger"
-                    aria-expanded={bankListOpen}
-                  >
-                    <span>Choose your bank</span>
-                    <ChevronIcon up={bankListOpen} />
-                  </button>
-                  {bankListOpen && (
-                    <div className="flex w-full flex-col items-start rounded-[8px]" style={{ background: "var(--fc-panel)" }}>
-                      {banks.map((b) => (
-                        <button
-                          key={b.id}
-                          type="button"
-                          onClick={() => pickBank(b)}
-                          className="w-full py-3 pr-[110px] pl-4 text-left text-[16px] hover:underline"
-                          style={fcMuted}
-                        >
-                          {b.name}
-                        </button>
-                      ))}
+          <div className="flex flex-col gap-9 lg:gap-[221px]">
+            <div aria-live="polite">
+              {status === "created" ? (
+                <>
+                  {bankStep === "pick" && (
+                    <div className="ora-step flex w-full flex-col items-start gap-2 lg:w-[476px]">
+                      <button
+                        type="button"
+                        onClick={() => setBankListOpen((v) => !v)}
+                        className="fc-dropdown-trigger"
+                        aria-expanded={bankListOpen}
+                      >
+                        <span>Choose your bank</span>
+                        <ChevronIcon up={bankListOpen} />
+                      </button>
+                      {bankListOpen && (
+                        <div className="flex w-full flex-col items-start rounded-[8px]" style={{ background: "var(--fc-panel)" }}>
+                          {banks.map((b) => (
+                            <button
+                              key={b.id}
+                              type="button"
+                              onClick={() => pickBank(b)}
+                              className="w-full px-4 py-3 text-left text-[16px] hover:underline"
+                              style={fcMuted}
+                            >
+                              {b.name}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
-              )}
 
-              {bankStep === "connecting" && selectedBank && (
-                <div className="ora-step flex items-center gap-2.5 text-[16px]" style={fcMuted}>
-                  <span
-                    aria-hidden
-                    className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-black/15"
-                    style={{ borderTopColor: "var(--fc-muted)" }}
-                  />
-                  Logging in to {selectedBank.bankName}…
-                </div>
-              )}
-
-              {bankStep === "ready" && selectedBank && (
-                <div className="ora-step flex items-center justify-between" style={fc}>
-                  <span className="text-[16px]">Connected — {selectedBank.bankName}</span>
-                  <button type="button" onClick={useDifferentBank} className="text-[14px] hover:underline" style={fcMuted}>
-                    not you?
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* primary action / state */}
-          <div className="mt-9" aria-live="polite" aria-atomic="true">
-            {status === "created" && identified && (
-              <div className="ora-step">
-                <button onClick={run} disabled={busy === "run"} className="fc-pay-button">
-                  {busy === "run" ? "…" : `Pay ${fmtMinor(intent.amount, intent.currency)}`}
-                </button>
-              </div>
-            )}
-
-            {running && status !== "awaiting_agent_approval" && (
-              <div className="flex items-center gap-2.5 rounded-[4px] bg-[#f3f1ec] px-3.5 py-3 text-[14px]" style={fc}>
-                <span aria-hidden className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-black/20 border-t-black" />
-                <StatusLine status={status} />
-              </div>
-            )}
-
-            {/* A small, passive animation of what's happening underneath —
-                never a fee/cost figure (that's the merchant dashboard's
-                job), and never anything to click: the payer isn't choosing
-                a route, just watching Ora check real ones and settle on
-                one. Every name/status here is the same real, live data the
-                merchant sees in full on their own dashboard. */}
-            {status !== "created" && routeCount > 0 && (
-              <div
-                className="ora-route-collapse mt-3 overflow-hidden rounded-[4px] border"
-                style={{ borderColor: "var(--fc-border)" }}
-              >
-                {routesCollapsed ? (
-                  <RoutingSummaryLine routes={data.routes} />
-                ) : (
-                  <>
-                    <div className="flex items-center gap-2 px-3.5 py-2.5 text-[13px] font-medium" style={fc}>
+                  {bankStep === "connecting" && selectedBank && (
+                    <div className="ora-step flex items-center gap-2.5 text-[16px] lg:w-[476px]" style={fcMuted}>
                       <span
                         aria-hidden
-                        className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full"
-                        style={{ background: "#32c770" }}
+                        className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-black/15"
+                        style={{ borderTopColor: "var(--fc-muted)" }}
                       />
-                      Routing your payment
+                      Logging in to {selectedBank.bankName}…
                     </div>
-                    <div className="border-t px-2 pt-2" style={{ borderColor: "var(--fc-border)" }}>
-                      <RoutingWeb routes={data.routes} revealedCount={routesRevealed} />
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
+                  )}
 
-            {status === "awaiting_agent_approval" && approval && (
-              <div className="rounded-[4px] border border-warning/40 bg-warning-bg px-4 py-3.5">
-                <div className="text-[16px] font-semibold" style={fc}>
-                  Approval needed
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => decide("approve")}
-                    disabled={busy === "approve"}
-                    className="fc-pay-button flex-1"
-                  >
+                  {bankStep === "ready" && selectedBank && (
+                    <div className="ora-step flex items-center justify-between text-[16px] lg:w-[476px]" style={fc}>
+                      <span>Connected — {selectedBank.bankName}</span>
+                      <button type="button" onClick={useDifferentBank} className="text-[14px] hover:underline" style={fcMuted}>
+                        not you?
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                selectedBank && (
+                  <div className="flex items-center text-[16px] lg:w-[476px]" style={fc}>
+                    Connected — {selectedBank.bankName}
+                  </div>
+                )
+              )}
+            </div>
+
+            <div className="flex w-full flex-col items-start gap-[23px] lg:w-[476px]" aria-live="polite" aria-atomic="true">
+              {phase === "pay" && (
+                <button onClick={run} disabled={!identified} className="fc-pay-button">
+                  {`Pay ${fmtMinor(intent.amount, intent.currency)}`}
+                </button>
+              )}
+
+              {phase === "approve" && (
+                <div className="flex w-full gap-2">
+                  <button onClick={() => decide("approve")} disabled={busy === "approve"} className="fc-pay-button flex-1">
                     {busy === "approve" ? "…" : `Approve ${fmtMinor(intent.amount, intent.currency)}`}
                   </button>
-                  <button
-                    onClick={() => decide("reject")}
-                    disabled={busy === "decline"}
-                    className="fc-secondary-button"
-                  >
+                  <button onClick={() => decide("reject")} disabled={busy === "decline"} className="fc-secondary-button">
                     Decline
                   </button>
                 </div>
-              </div>
-            )}
+              )}
 
-            {(status === "delivered" || status === "paid") && (
-              <button onClick={() => router.push(`/checkout/${intent.id}/receipt`)} className="fc-pay-button">
-                View receipt
-              </button>
-            )}
+              {phase === "running" && (
+                <div className="flex w-full items-center gap-2.5 rounded-[4px] bg-[#f3f1ec] px-3.5 py-3 text-[14px]" style={fc}>
+                  <span aria-hidden className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-black/20 border-t-black" />
+                  <StatusLine status={status} />
+                </div>
+              )}
 
-            {FAILED.has(status) && (
-              <div className="rounded-[4px] border border-negative/30 bg-negative-bg px-4 py-3 text-[14px]">
-                <div className="font-semibold text-negative">{status.replace(/_/g, " ")}</div>
-              </div>
-            )}
+              {phase === "receipt" && (
+                <button onClick={() => router.push(`/checkout/${intent.id}/receipt`)} className="fc-pay-button">
+                  View receipt
+                </button>
+              )}
 
-            {error && <p className="mt-2 text-[14px] text-negative">{error}</p>}
+              {phase === "failed" && (
+                <div className="w-full rounded-[4px] border border-negative/30 bg-negative-bg px-4 py-3 text-[14px]">
+                  <div className="font-semibold text-negative">{status.replace(/_/g, " ")}</div>
+                </div>
+              )}
+
+              {status === "created" && (
+                <p className="text-[14px] leading-[22px]" style={fcMuted}>
+                  Your bank login is used only to authorize this payment — Ora never stores your bank credentials.
+                </p>
+              )}
+
+              {error && <p className="text-[14px] text-negative">{error}</p>}
+            </div>
           </div>
         </div>
 
-        {/* ── Order Summary ───────────────────────────────────────────── */}
-        <div style={{ background: "var(--fc-panel)", borderLeft: "1px solid var(--fc-border)" }} className="p-6 sm:p-10">
-          <h2 className="text-[22px] font-semibold tracking-tight" style={fc}>
-            Order Summary
-          </h2>
-          <div className="my-3 h-px" style={{ background: "var(--fc-border)" }} />
+        {/* ── Order Summary — literal node 172:912 ────────────────────── */}
+        <div
+          style={{ background: "var(--fc-panel)", borderLeft: "1px solid var(--fc-border)" }}
+          className="flex flex-col gap-9 p-6 sm:p-10 lg:pb-[48px] lg:pl-[66px] lg:pr-[48px] lg:pt-[123px]"
+        >
+          <div className="flex flex-col gap-2">
+            <h2 className="text-[24px] font-semibold leading-[28px] tracking-[-0.48px]" style={fc}>
+              Order Summary
+            </h2>
+            <div className="h-px w-full lg:w-[476px]" style={{ background: "var(--fc-border)" }} />
+          </div>
 
-          <div className="mt-7 flex gap-4">
+          <div className="flex gap-4 lg:w-[476px]">
             <div
               className="grid h-[70px] w-[70px] shrink-0 place-items-center rounded-[4px] border"
               style={{ borderColor: "var(--fc-muted)" }}
             >
               <DocIcon />
             </div>
-            <div className="min-w-0">
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
               <div className="flex items-baseline justify-between gap-4 text-[18px] font-medium" style={fc}>
                 <span className="truncate">{intent.description}</span>
                 <span className="shrink-0">{fmtMinor(intent.amount, intent.currency)}</span>
               </div>
               {intent.reference && (
-                <div className="mt-1 text-[16px]" style={fcMuted}>
-                  Invoice {intent.reference}
+                <div className="flex items-baseline justify-between gap-4 text-[16px] font-medium" style={fcMuted}>
+                  <span className="truncate">Invoice {intent.reference}</span>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="my-6 h-px" style={{ background: "var(--fc-border)" }} />
-
-          <div className="space-y-4 text-[16px]" style={fc}>
-            <div className="flex justify-between">
-              <span>Merchant receives</span>
-              <span>{intent.settlementCurrency}</span>
+          <div className="flex flex-col gap-9 lg:w-[476px]">
+            <div className="h-px w-full" style={{ background: "var(--fc-border)" }} />
+            <div className="flex w-full gap-4">
+              <input
+                disabled
+                placeholder="Gift or discount code"
+                className="min-w-0 flex-1 rounded-[4px] border-[1.5px] bg-white px-4 py-[14px] text-[16px] disabled:cursor-not-allowed"
+                style={{ borderColor: "var(--fc-muted)", color: "var(--fc-muted)" }}
+              />
+              <button
+                type="button"
+                disabled
+                className="shrink-0 rounded-[4px] border-[1.5px] px-[23px] py-[13px] text-[16px] font-medium disabled:cursor-not-allowed"
+                style={{ borderColor: "var(--fc-muted)", background: "var(--fc-muted)", color: "var(--fc-green-text)" }}
+              >
+                Apply
+              </button>
             </div>
           </div>
 
-          <div className="my-6 h-px" style={{ background: "var(--fc-border)" }} />
-
-          <div className="flex items-start justify-between gap-4">
-            <div className="text-[16px] font-medium" style={fc}>
-              Total
+          <div className="flex flex-col gap-6 lg:w-[476px]">
+            <div className="h-px w-full" style={{ background: "var(--fc-border)" }} />
+            <div className="flex w-full flex-col gap-4 text-[16px] font-medium" style={fc}>
+              <div className="flex justify-between">
+                <span>Merchant receives</span>
+                <span>{intent.settlementCurrency}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Settles on</span>
+                <span>XRPL Testnet</span>
+              </div>
             </div>
-            <div className="text-[32px] font-medium" style={fc}>
-              {fmtMinor(intent.amount, intent.currency)}
+          </div>
+
+          <div className="flex flex-col gap-6 lg:w-[476px]">
+            <div className="h-px w-full" style={{ background: "var(--fc-border)" }} />
+            <div className="flex w-full items-start justify-between gap-4">
+              <div className="text-[16px] font-medium" style={fc}>
+                Total
+              </div>
+              <div className="text-[36px] font-medium" style={fc}>
+                {fmtMinor(intent.amount, intent.currency)}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── agent activity — customer-safe: what's routing/settling the
-          payment, never processing-fee/cost figures (that's for the
-          merchant's own dashboard, not the payer). ────────────────────── */}
-      <div className="mx-auto max-w-[1440px] px-6 pb-10 sm:px-10">
-        {data.agentRun ? (
-          <AgentDecisionPanel data={data} audience="customer" />
-        ) : (
-          <Card className="flex items-center justify-between p-5">
-            <span className="text-[15px] font-semibold text-ink">
-              Ora agent — routes &amp; settles your payment
-            </span>
-            <span className="text-[12px] text-faint">idle</span>
-          </Card>
-        )}
-      </div>
+      {/* ── the one small "live" panel, underneath the whole card ───────── */}
+      {status !== "created" && routeCount > 0 && (
+        <div className="mx-auto max-w-[1440px] px-6 pb-10 sm:px-10">
+          <div className="ora-route-collapse overflow-hidden rounded-[4px] border" style={{ borderColor: "var(--fc-border)" }}>
+            {routesCollapsed ? (
+              <RoutingSummaryLine routes={data.routes} />
+            ) : (
+              <>
+                <div className="flex items-center gap-2 px-3.5 py-2.5 text-[13px] font-medium" style={fc}>
+                  <span
+                    aria-hidden
+                    className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full"
+                    style={{ background: "#32c770" }}
+                  />
+                  Routing your payment
+                </div>
+                <div className="border-t px-2 pt-2" style={{ borderColor: "var(--fc-border)" }}>
+                  <RoutingWeb routes={data.routes} revealedCount={routesRevealed} />
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

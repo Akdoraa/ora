@@ -79,7 +79,7 @@ body {
   --fc-green: #32c770;
   --fc-green-text: #f3f3f3;
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  background: var(--color-paper);
+  background: #ffffff;
 }
 
 /* The Ora dashboard, restyled from the dash-template "❖ Components" page
